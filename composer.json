@@ -14,12 +14,6 @@
       "spiritdead\\resque\\": ""
     }
   },
-  "repositories": [
-    {
-      "type": "git",
-      "url": "https://github.com/spiritdead/yii2-resque"
-    }
-  ],
   "require": {
     "spiritdead/php-resque": "dev-master",
     "spiritdead/php-resque-scheduler": "dev-master"
