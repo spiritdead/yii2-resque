@@ -2,14 +2,14 @@
 
 namespace spiritdead\resque\components\base;
 
-use common\models\LogJob;
-use common\models\Job as modelJob;
+use spiritdead\resque\models\LogJob;
+use spiritdead\resque\models\Job as modelJob;
 use Resque_Job_DontPerform;
 use Resque_Exception;
 
 /**
  * Class Job
- * @package common\components
+ * @package spiritdead\resque\components\base
  */
 class Job
 {

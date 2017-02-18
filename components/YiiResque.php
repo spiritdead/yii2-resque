@@ -3,15 +3,10 @@
 namespace spiritdead\resque\components;
 
 use spiritdead\resque\components\base\AsyncActionJob;
-use common\models\Job;
-use common\models\mongo\Job as mongoJob;
+use spiritdead\resque\models\Job;
+use spiritdead\resque\models\mongo\Job as mongoJob;
 use yii\base\Component;
 use Yii;
-
-//use resque\lib\ResqueAutoloader;
-//use resque\lib\Resque;
-//use resque\lib\ResqueScheduler;
-
 use Resque;
 use Resque_Job_Status;
 use yii\base\InvalidConfigException;
@@ -19,7 +14,7 @@ use yii\helpers\ArrayHelper;
 
 /**
  * Class YiiResque
- * @package common\components\job
+ * @package spiritdead\resque\components
  */
 class YiiResque extends Component
 {
@@ -53,7 +48,7 @@ class YiiResque extends Component
     /**
      * @const string The async job class
      */
-    const JOB_CLASS = '\\common\\components\\job\\base\\AsyncActionJob';
+    const JOB_CLASS = '\\spiritdead\\resque\\components\\base\\AsyncActionJob';
 
     /**
      * Initializes the connection.

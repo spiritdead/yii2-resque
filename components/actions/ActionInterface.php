@@ -4,7 +4,7 @@ namespace spiritdead\resque\components\actions;
 
 /**
  * Interface JobInterface
- * @package common\components\job\actions
+ * @package spiritdead\resque\components\actions
  */
 interface ActionInterface
 {

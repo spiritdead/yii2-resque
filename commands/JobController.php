@@ -12,6 +12,8 @@ use yii\console\Controller;
 use yii;
 
 /**
+ * Controller for management of the jobs in queue.
+ *
  * Class JobController
  * @package console\controllers
  */
@@ -31,10 +33,12 @@ class JobController extends Controller
     public function __construct($id, $module, array $config = [])
     {
         parent::__construct($id, $module, $config);
-        $this->_resque = Yii::$app->resque;
+        $this->_resque = Yii::$app->yiiResque;
     }
 
     /**
+     * Action for process the jobs in queue.
+     *
      * @param string $queues
      */
     public function actionProcess($queues = '*')

@@ -4,7 +4,7 @@ namespace spiritdead\resque\components\actions;
 
 /**
  * Class DummyJob
- * @package common\components\job\actions
+ * @package spiritdead\resque\components\actions
  */
 class DummyAction extends BaseAction implements ActionInterface
 {

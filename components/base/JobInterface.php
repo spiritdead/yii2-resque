@@ -4,7 +4,7 @@ namespace spiritdead\resque\components\base;
 
 /**
  * Interface JobInterface
- * @package common\components
+ * @package spiritdead\resque\components\base
  */
 interface JobInterface
 {

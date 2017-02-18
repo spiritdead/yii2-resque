@@ -4,9 +4,9 @@ namespace spiritdead\resque\components\base;
 
 use spiritdead\resque\components\YiiResque;
 use spiritdead\resque\components\base\Job as baseJob;
-use common\models\Job;
-use common\models\LogJob;
-use common\models\mongo\Job as mongoJob;
+use spiritdead\resque\models\Job;
+use spiritdead\resque\models\LogJob;
+use spiritdead\resque\models\mongo\Job as mongoJob;
 use Yii;
 use Resque_Event;
 use Resque_Job_DontPerform;
@@ -15,7 +15,7 @@ use yii\helpers\ArrayHelper;
 
 /**
  * Class AsyncActionJob
- * @package common\components\job\base
+ * @package spiritdead\resque\components\base
  */
 class AsyncActionJob extends baseJob implements JobInterface
 {
@@ -49,6 +49,7 @@ class AsyncActionJob extends baseJob implements JobInterface
             );
         }
         Resque_Event::listen('afterPerform', function (\Resque_Job $job) {
+            /* @var $instance AsyncActionJob */
             $instance = $job->getInstance();
             $instance->_job->result = $instance->result['success'] ? Job::RESULT_SUCCESS : Job::RESULT_FAILED;
             $instance->_job->result_message = $instance->result['message'];
@@ -119,7 +120,7 @@ class AsyncActionJob extends baseJob implements JobInterface
                 $this->args[YiiResque::ACTION_META_KEY]['id'],
                 false,
                 [
-                    'message' => Yii::t('common', 'Job not found in database mysql.')
+                    'message' => Yii::t('resque', 'Job not found in database mysql.')
                 ],
                 false
             );
@@ -132,7 +133,7 @@ class AsyncActionJob extends baseJob implements JobInterface
                     $this->args[YiiResque::ACTION_META_KEY]['id'],
                     false,
                     [
-                        'message' => Yii::t('common', 'Job not found in database mongo.')
+                        'message' => Yii::t('resque', 'Job not found in database mongo.')
                     ],
                     false
                 );
