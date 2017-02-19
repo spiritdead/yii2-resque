@@ -10,12 +10,13 @@ use Resque;
 use Resque_Worker;
 use yii\console\Controller;
 use yii;
+use yii\base\Module;
 
 /**
  * Controller for management of the jobs in queue.
  *
  * Class JobController
- * @package console\controllers
+ * @package spiritdead\resque\commands
  */
 class JobController extends Controller
 {
@@ -27,7 +28,7 @@ class JobController extends Controller
     /**
      * JobController constructor.
      * @param string $id
-     * @param \yii\base\Module $module
+     * @param Module $module
      * @param array $config
      */
     public function __construct($id, $module, array $config = [])
@@ -53,6 +54,7 @@ class JobController extends Controller
         $processed = 0;
         \Resque_Event::listen('afterPerform', function (\Resque_Job $job) use ($console, &$processed) {
             $processed++;
+            /* @var $instance AsyncActionJob */
             $instance = $job->getInstance();
             $classShort = explode('\\', $instance->result['class']);
             if (count($classShort) > 0) {
@@ -131,24 +133,25 @@ class JobController extends Controller
      */
     public function actionProcessSchedule()
     {
+        $console = $this;
         // Set various aliases
-        printf("Starting scheduled job process\n");
+        $console->stdout("Starting scheduled job process" . PHP_EOL);
 
         // Instantiate the queues worker
         $workerScheduler = new \ResqueScheduler_Worker();
-        $console = $this;
         \Resque_Event::listen('beforeDelayedEnqueue', function ($queue, $class, $args) use ($console) {
-            echo Yii::t('resque', 'WorkerScheduler: Job scheduled ID[{id}]: was processed / Pending: {pending}', [
-                    'id' => $args[0][YiiResque::ACTION_META_KEY]['id'],
-                    'queue' => $queue,
-                    'pending' => $console->_resque->getDelayedJobsCount()
-                ]) . PHP_EOL;
+            $console->stdout(Yii::t('resque',
+                    'WorkerScheduler: Job scheduled ID[{id}]: was processed / Pending: {pending}', [
+                        'id' => $args[0][YiiResque::ACTION_META_KEY]['id'],
+                        'queue' => $queue,
+                        'pending' => $console->_resque->getDelayedJobsCount()
+                    ]) . PHP_EOL);
         });
-        \Resque_Event::listen('afterEnqueue', function ($class, $args, $queue) {
-            echo Yii::t('resque', 'WorkerScheduler: Job ID[{id}]: was enqueued in the queue [{queue}]', [
+        \Resque_Event::listen('afterEnqueue', function ($class, $args, $queue) use ($console) {
+            $console->stdout(Yii::t('resque', 'WorkerScheduler: Job ID[{id}]: was enqueued in the queue [{queue}]', [
                     'id' => $args[YiiResque::ACTION_META_KEY]['id'],
                     'queue' => $queue
-                ]) . PHP_EOL;
+                ]) . PHP_EOL);
         });
         // Start the worker
         $workerScheduler->work(2);
@@ -189,24 +192,9 @@ class JobController extends Controller
      */
     public function actionTest()
     {
-        /*$this->_resque->createJob(DummyErrorAction::class, []);
-        $this->_resque->enqueueJobIn(5, DummyAction::class, []);
-        $this->_resque->enqueueJobIn(5, DummyAction::class, []);
-        $this->_resque->enqueueJobIn(5, DummyErrorAction::class, []);
-
         $this->_resque->createJob(DummyErrorAction::class, []);
+        $this->_resque->createJob(DummyAction::class, []);
         $this->_resque->enqueueJobIn(5, DummyAction::class, []);
-        $this->_resque->enqueueJobIn(5, DummyAction::class, []);
-        $this->_resque->enqueueJobIn(5, DummyErrorAction::class, []);
-
-        $this->_resque->createJob(DummyErrorAction::class, []);
-        $this->_resque->enqueueJobIn(5, DummyAction::class, []);
-        $this->_resque->enqueueJobIn(5, DummyAction::class, []);
-        $this->_resque->enqueueJobIn(5, DummyErrorAction::class, []);
-
-        $this->_resque->createJob(DummyErrorAction::class, []);
-        $this->_resque->enqueueJobIn(5, DummyAction::class, []);
-        $this->_resque->enqueueJobIn(5, DummyAction::class, []);*/
         $this->_resque->enqueueJobIn(5, DummyErrorAction::class, []);
 
         /*// For debug in mainThread
