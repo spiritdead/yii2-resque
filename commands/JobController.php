@@ -162,14 +162,25 @@ class JobController extends Controller
      */
     public function actionClean()
     {
-        $redisQueueInfo = $this->_resque->getQueues();
-        var_dump($redisQueueInfo);
+        $this->stdout(Yii::t('resque', 'Cleaning Queues...') . PHP_EOL);
         foreach (Resque::queues() as $queueName) {
             if ($queueName != AsyncActionJob::QUEUE_NAME) {
+                $this->stdout(Yii::t('resque', 'Queue {queue} deleted', ['queue' => $queueName]) . PHP_EOL);
                 $this->_resque->removeQueue($queueName);
             }
         }
-        var_dump(Resque::queues());
+        $this->stdout(Yii::t('resque', 'Cleaning Workers...') . PHP_EOL);
+        $workers = $this->_resque->getWorkers();
+        $workerSchedulers = $this->_resque->getWorkerSchedulers();
+        foreach ($workers as $worker) {
+            $this->stdout(Yii::t('resque', 'Worker {worker} deleted', ['worker' => $worker]) . PHP_EOL);
+            $worker->unregisterWorker();
+        }
+        foreach ($workerSchedulers as $workerScheduler) {
+            $this->stdout(Yii::t('resque', 'Worker scheduler {worker} deleted',
+                    ['worker' => $workerScheduler]) . PHP_EOL);
+            $workerScheduler->unregisterWorker();
+        }
     }
 
     /**
@@ -192,6 +203,9 @@ class JobController extends Controller
      */
     public function actionTest()
     {
+        // Command example
+        //Yii::$app->yiiResque->createJob(DummyErrorAction::class, []);
+
         $this->_resque->createJob(DummyErrorAction::class, []);
         $this->_resque->createJob(DummyAction::class, []);
         $this->_resque->enqueueJobIn(5, DummyAction::class, []);

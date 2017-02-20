@@ -3,21 +3,34 @@ Module yii2 resque
 
 for use this library we need define in the configuration this parameters
 
-common/config/main.php (yii2-advanced)
+(yii2-advanced)
+
+common/config/main.php 
 ```php
-'modules' => [
-    ...
-    'resque' => [
-        'class' => 'spiritdead\resque\Module',
-    ],
-    ...
-],
 'components' => [
     ...
     'yiiResque' => [
         'class' => 'spiritdead\resque\components\YiiResque',
         'server' => 'localhost',
         'port' => '6379'
+    ],
+    ...
+],
+```
+
+backend/config/main.php and console/config/main.php for use the commands
+```php
+'bootstrap' => [
+    ...
+    'resque',
+    ...
+],
+'modules' => [
+    ...
+    'resque' => [
+        'class' => 'spiritdead\resque\Module',
+        'layout' => '',
+        'layoutAlias' => ''
     ],
     ...
 ],

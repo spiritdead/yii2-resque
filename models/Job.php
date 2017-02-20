@@ -39,6 +39,7 @@ class Job extends \yii\db\ActiveRecord
      * job process in queue
      */
     const RESULT_NONE = 0;
+
     /**
      * @inheritdoc
      */
@@ -71,7 +72,13 @@ class Job extends \yii\db\ActiveRecord
             [['user_id', 'created_at', 'result', 'executed_at', 'scheduled', 'scheduled_at'], 'integer'],
             [['result_message'], 'string'],
             [['id_mongo'], 'string', 'max' => 255],
-            [['user_id'], 'exist', 'skipOnError' => true, 'targetClass' => User::className(), 'targetAttribute' => ['user_id' => 'id']],
+            [
+                ['user_id'],
+                'exist',
+                'skipOnError' => true,
+                'targetClass' => User::className(),
+                'targetAttribute' => ['user_id' => 'id']
+            ],
         ];
     }
 
