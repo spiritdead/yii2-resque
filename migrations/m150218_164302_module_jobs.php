@@ -23,7 +23,7 @@ class m150218_164302_module_jobs extends Migration
             'created_at' => Schema::TYPE_INTEGER . '(11) NOT NULL',
             'result' => Schema::TYPE_INTEGER,
             'result_message' => Schema::TYPE_TEXT,
-            'executed_at' => Schema::TYPE_BOOLEAN . '(11)',
+            'executed_at' => Schema::TYPE_INTEGER . '(11)',
             'scheduled' => Schema::TYPE_BOOLEAN . ' DEFAULT false',
             'scheduled_at' => Schema::TYPE_BOOLEAN . '(11)',
         ], $tableOptions);
@@ -50,7 +50,7 @@ class m150218_164302_module_jobs extends Migration
     public function down()
     {
         $this->dropForeignKey('fk_job_user', 'job');
-        $this->dropForeignKey('fk_log-job_job','log_job');
+        $this->dropForeignKey('fk_log-job_job', 'log_job');
         $this->dropTable('job');
         $this->dropTable('log_job');
     }
