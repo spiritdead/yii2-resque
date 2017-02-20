@@ -258,11 +258,11 @@ class YiiResque extends Component
     public function deleteJob($queue, $worker_class = null, $job_key = null)
     {
         if (!empty($job_key) && !empty($worker_class)) {
-            return Resque::dequeue($queue, array($worker_class => $job_key));
+            return Resque::dequeue($queue, [$worker_class => $job_key]);
         } // Remove job with specific job key
         else {
             if (!empty($worker_class) && empty($job_key)) {
-                return Resque::dequeue($queue, array($worker_class));
+                return Resque::dequeue($queue, [$worker_class]);
             } // Remove all jobs inside specified worker and queue
             else {
                 return Resque::dequeue($queue);
@@ -279,5 +279,37 @@ class YiiResque extends Component
     public function removeQueue($queue)
     {
         return Resque::removeQueue($queue);
+    }
+
+    /**
+     * @param string $id
+     * @return \Resque_Worker[]|\Resque_Worker|null
+     */
+    public function getWorkers($id = '')
+    {
+        if (empty($id)) {
+            return \Resque_Worker::all();
+        }
+        $worker = \Resque_Worker::find($id);
+        if (!$worker) {
+            return $worker;
+        }
+        return null;
+    }
+
+    /**
+     * @param string $id
+     * @return \ResqueScheduler_Worker[]|\ResqueScheduler_Worker|null
+     */
+    public function getWorkerSchedulers($id = '')
+    {
+        if (empty($id)) {
+            return \ResqueScheduler_Worker::all();
+        }
+        $worker = \ResqueScheduler_Worker::find($id);
+        if (!$worker) {
+            return $worker;
+        }
+        return null;
     }
 }
