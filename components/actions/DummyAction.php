@@ -2,13 +2,13 @@
 
 namespace spiritdead\yii2resque\components\actions;
 
-use spiritdead\resque\components\actions\base\ActionInterface;
-use spiritdead\resque\components\actions\base\BaseAction;
+use spiritdead\yii2resque\components\actions\base\ActionInterface;
+use spiritdead\yii2resque\components\actions\base\BaseAction;
 
 
 /**
  * Class DummyJob
- * @package spiritdead\resque\components\actions
+ * @package spiritdead\yii2resque\components\actions
  */
 class DummyAction extends BaseAction implements ActionInterface
 {

@@ -9,7 +9,7 @@ use yii\mongodb\ActiveRecord;
  *  This is the model class for table "job".
  *
  * Class Job
- * @package spiritdead\resque\models\mongo
+ * @package spiritdead\yii2resque\models\mongo
  *
  * @property integer $_id
  * @property string $class

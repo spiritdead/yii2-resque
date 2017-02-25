@@ -4,7 +4,7 @@ namespace spiritdead\yii2resque\components\base;
 
 /**
  * Interface JobInterface
- * @package spiritdead\resque\components\base
+ * @package spiritdead\yii2resque\components\base
  */
 interface JobInterface
 {

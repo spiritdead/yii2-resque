@@ -2,8 +2,8 @@
 
 namespace spiritdead\yii2resque\controllers;
 
-use spiritdead\resque\components\actions\DummyLongAction;
-use spiritdead\resque\models\Job;
+use spiritdead\yii2resque\components\actions\DummyLongAction;
+use spiritdead\yii2resque\models\Job;
 use yii\web\Controller;
 use yii;
 use yii\filters\AccessControl;

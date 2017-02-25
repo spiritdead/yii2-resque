@@ -2,11 +2,11 @@
 
 namespace spiritdead\yii2resque\commands;
 
-use spiritdead\resque\components\actions\DummyAction;
-use spiritdead\resque\components\actions\DummyLongAction;
-use spiritdead\resque\components\actions\DummyErrorAction;
-use spiritdead\resque\components\base\AsyncActionJob;
-use spiritdead\resque\components\YiiResque;
+use spiritdead\yii2resque\components\actions\DummyAction;
+use spiritdead\yii2resque\components\actions\DummyLongAction;
+use spiritdead\yii2resque\components\actions\DummyErrorAction;
+use spiritdead\yii2resque\components\base\AsyncActionJob;
+use spiritdead\yii2resque\components\YiiResque;
 use Resque;
 use Resque_Worker;
 use yii\console\Controller;
@@ -17,7 +17,7 @@ use yii\base\Module;
  * Controller for management of the jobs in queue.
  *
  * Class JobController
- * @package spiritdead\resque\commands
+ * @package spiritdead\yii2resque\commands
  */
 class JobController extends Controller
 {

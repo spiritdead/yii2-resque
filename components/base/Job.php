@@ -2,14 +2,14 @@
 
 namespace spiritdead\yii2resque\components\base;
 
-use spiritdead\resque\models\LogJob;
-use spiritdead\resque\models\Job as modelJob;
+use spiritdead\yii2resque\models\LogJob;
+use spiritdead\yii2resque\models\Job as modelJob;
 use Resque_Job_DontPerform;
 use Resque_Exception;
 
 /**
  * Class Job
- * @package spiritdead\resque\components\base
+ * @package spiritdead\yii2resque\components\base
  */
 class Job
 {

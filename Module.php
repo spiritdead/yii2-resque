@@ -2,7 +2,7 @@
 
 namespace spiritdead\yii2resque;
 
-use spiritdead\resque\traits\TranslationTrait;
+use spiritdead\yii2resque\traits\TranslationTrait;
 use yii\base\Module as BaseModule;
 use yii;
 use yii\console\Application;
@@ -32,7 +32,7 @@ class Module extends BaseModule implements yii\base\BootstrapInterface
     /**
      * @var string
      */
-    public $controllerNamespace = 'spiritdead\resque\controllers';
+    public $controllerNamespace = 'spiritdead\yii2resque\controllers';
 
     /**
      * @var string BaseAlias for the layouts
@@ -71,7 +71,7 @@ class Module extends BaseModule implements yii\base\BootstrapInterface
     public function bootstrap($app)
     {
         if ($app instanceof Application) {
-            $this->controllerNamespace = 'spiritdead\resque\commands';
+            $this->controllerNamespace = 'spiritdead\yii2resque\commands';
         }
     }
 }

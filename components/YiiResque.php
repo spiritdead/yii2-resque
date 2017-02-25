@@ -2,9 +2,9 @@
 
 namespace spiritdead\yii2resque\components;
 
-use spiritdead\resque\components\base\AsyncActionJob;
-use spiritdead\resque\models\Job;
-use spiritdead\resque\models\mongo\Job as mongoJob;
+use spiritdead\yii2resque\components\base\AsyncActionJob;
+use spiritdead\yii2resque\models\Job;
+use spiritdead\yii2resque\models\mongo\Job as mongoJob;
 use yii\base\Component;
 use Yii;
 use Resque;
@@ -14,7 +14,7 @@ use yii\helpers\ArrayHelper;
 
 /**
  * Class YiiResque
- * @package spiritdead\resque\components
+ * @package spiritdead\yii2resque\components
  */
 class YiiResque extends Component
 {

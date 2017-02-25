@@ -2,11 +2,11 @@
 
 namespace spiritdead\yii2resque\components\base;
 
-use spiritdead\resque\components\YiiResque;
-use spiritdead\resque\components\base\Job as baseJob;
-use spiritdead\resque\models\Job;
-use spiritdead\resque\models\LogJob;
-use spiritdead\resque\models\mongo\Job as mongoJob;
+use spiritdead\yii2resque\components\YiiResque;
+use spiritdead\yii2resque\components\base\Job as baseJob;
+use spiritdead\yii2resque\models\Job;
+use spiritdead\yii2resque\models\LogJob;
+use spiritdead\yii2resque\models\mongo\Job as mongoJob;
 use yii;
 use Resque_Event;
 use Resque_Job_DontPerform;
@@ -15,7 +15,7 @@ use yii\helpers\ArrayHelper;
 
 /**
  * Class AsyncActionJob
- * @package spiritdead\resque\components\base
+ * @package spiritdead\yii2resque\components\base
  */
 class AsyncActionJob extends baseJob implements JobInterface
 {

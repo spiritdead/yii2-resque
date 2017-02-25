@@ -2,9 +2,9 @@
 
 use yii\web\View;
 use yii\helpers\Html;
-use spiritdead\resque\components\YiiResque;
-use spiritdead\resque\models\Job;
-use spiritdead\resque\models\mongo\Job as mongoJob;
+use spiritdead\yii2resque\components\YiiResque;
+use spiritdead\yii2resque\models\Job;
+use spiritdead\yii2resque\models\mongo\Job as mongoJob;
 
 /* @var $this yii\web\View */
 /* @var $worker \Resque_Worker */
