@@ -48,7 +48,7 @@ class YiiResque extends Component
     /**
      * @const string The async job class
      */
-    const JOB_CLASS = '\\spiritdead\\resque\\components\\base\\AsyncActionJob';
+    const JOB_CLASS = '\\spiritdead\\yii2resque\\components\\base\\AsyncActionJob';
 
     /**
      * Initializes the connection.
