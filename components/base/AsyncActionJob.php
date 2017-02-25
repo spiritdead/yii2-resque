@@ -68,7 +68,7 @@ class AsyncActionJob extends baseJob implements JobInterface
                 //$instance->_job->delete(); for the moment dont delete the completed jobs
             } else {
                 \Resque_Stat::incr('failed');
-                \Resque_Stat::incr('failed:' . $this->worker);
+                \Resque_Stat::incr('failed:' . $job->worker);
                 // Log the job error
                 if (isset($instance->result['error'])) {
                     $contentError = [
