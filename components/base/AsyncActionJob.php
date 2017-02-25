@@ -7,7 +7,7 @@ use spiritdead\resque\components\base\Job as baseJob;
 use spiritdead\resque\models\Job;
 use spiritdead\resque\models\LogJob;
 use spiritdead\resque\models\mongo\Job as mongoJob;
-use Yii;
+use yii;
 use Resque_Event;
 use Resque_Job_DontPerform;
 use yii\base\ErrorException;

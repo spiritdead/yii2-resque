@@ -3,6 +3,7 @@
 namespace spiritdead\resque\commands;
 
 use spiritdead\resque\components\actions\DummyAction;
+use spiritdead\resque\components\actions\DummyLongAction;
 use spiritdead\resque\components\actions\DummyErrorAction;
 use spiritdead\resque\components\base\AsyncActionJob;
 use spiritdead\resque\components\YiiResque;
@@ -62,7 +63,7 @@ class JobController extends Controller
             } else {
                 $classShort = $instance->result['class'];
             }
-            $logText = Yii::t('console',
+            $logText = Yii::t('resque',
                     "Worker Job[{id}][{class}][{action}]: {success}\nMessage: {message}\nData: {data}", [
                         'id' => $instance->_job->id,
                         'class' => $classShort,
@@ -72,23 +73,23 @@ class JobController extends Controller
                         'data' => json_encode($instance->args)
                     ]) . PHP_EOL;
             $pendingText = Yii::t(
-                    'console',
+                    'resque',
                     "Worker: Processed {processed} / Pending jobs {pending}", [
                     'pending' => $console->_resque->getJobsCount(),
                     'processed' => $processed
                 ]) . PHP_EOL;
-            $scheduledText = Yii::t('console', "Job scheduled: {timeScheduled}", [
+            $scheduledText = Yii::t('resque', "Job scheduled: {timeScheduled}", [
                     'timeScheduled' => date('d/m/Y h:i:s a', $instance->_job->scheduled_at)
                 ]) . PHP_EOL;
-            $executedText = Yii::t('console', "Job executed: {timeExecuted}", [
+            $executedText = Yii::t('resque', "Job executed: {timeExecuted}", [
                     'timeExecuted' => date('d/m/Y h:i:s a', $instance->result['executed_at'])
                 ]) . PHP_EOL;
-            $createdText = Yii::t('console', "Job created: {timeCreated}", [
+            $createdText = Yii::t('resque', "Job created: {timeCreated}", [
                     'timeCreated' => date('d/m/Y h:i:s a', $instance->_job->created_at)
                 ]) . PHP_EOL;
             $errorText = '';
             if (isset($instance->result['error'])) {
-                $errorText = Yii::t('console', "Exception: {messageError} / line {lineError}", [
+                $errorText = Yii::t('resque', "Exception: {messageError} / line {lineError}", [
                         'messageError' => $instance->result['error']->getMessage(),
                         'lineError' => $instance->result['error']->getLine()
                     ]) . PHP_EOL;
@@ -160,26 +161,43 @@ class JobController extends Controller
     /**
      * Clean-up queues in the redis
      */
-    public function actionClean()
+    public function actionClean($action = '')
     {
-        $this->stdout(Yii::t('resque', 'Cleaning Queues...') . PHP_EOL);
-        foreach (Resque::queues() as $queueName) {
-            if ($queueName != AsyncActionJob::QUEUE_NAME) {
-                $this->stdout(Yii::t('resque', 'Queue {queue} deleted', ['queue' => $queueName]) . PHP_EOL);
-                $this->_resque->removeQueue($queueName);
+        if($action == 'delete') {
+            $this->stdout(Yii::t('resque', 'Cleaning Queues...') . PHP_EOL);
+            foreach (Resque::queues() as $queueName) {
+                if ($queueName != AsyncActionJob::QUEUE_NAME) {
+                    $this->stdout(Yii::t('resque', 'Queue {queue} deleted', ['queue' => $queueName]) . PHP_EOL);
+                    $this->_resque->removeQueue($queueName);
+                }
             }
-        }
-        $this->stdout(Yii::t('resque', 'Cleaning Workers...') . PHP_EOL);
-        $workers = $this->_resque->getWorkers();
-        $workerSchedulers = $this->_resque->getWorkerSchedulers();
-        foreach ($workers as $worker) {
-            $this->stdout(Yii::t('resque', 'Worker {worker} deleted', ['worker' => $worker]) . PHP_EOL);
-            $worker->unregisterWorker();
-        }
-        foreach ($workerSchedulers as $workerScheduler) {
-            $this->stdout(Yii::t('resque', 'Worker scheduler {worker} deleted',
-                    ['worker' => $workerScheduler]) . PHP_EOL);
-            $workerScheduler->unregisterWorker();
+            $this->stdout(Yii::t('resque', 'Cleaning Workers...') . PHP_EOL);
+            $workers = $this->_resque->getWorkers();
+            $workerSchedulers = $this->_resque->getWorkerSchedulers();
+            foreach ($workers as $worker) {
+                $this->stdout(Yii::t('resque', 'Worker {worker} deleted', ['worker' => $worker]) . PHP_EOL);
+                $worker->unregisterWorker();
+            }
+            foreach ($workerSchedulers as $workerScheduler) {
+                $this->stdout(Yii::t('resque', 'Worker scheduler {worker} deleted',
+                        ['worker' => $workerScheduler]) . PHP_EOL);
+                $workerScheduler->unregisterWorker();
+            }
+        } elseif($action == 'inactive') {
+            $workerPids = Resque_Worker::workerPids(); //are generics all of the PID of the computer
+            $workers = array_merge($this->_resque->getWorkers(), $this->_resque->getWorkerSchedulers());
+            foreach ($workers as $worker) {
+                if (is_object($worker)) {
+                    list($host, $pid, $queues) = explode(':', (string)$worker, 3);
+                    if (in_array($pid, $workerPids)) {
+                        continue;
+                    }
+                    $worker->unregisterWorker();
+                    $this->stdout(Yii::t('resque', 'Worker {worker} deleted', ['worker' => $worker]) . PHP_EOL);
+                }
+            }
+        } else {
+            $this->stdout(Yii::t('resque', 'Actions availables are [delete/inactive]') . PHP_EOL);
         }
     }
 
@@ -188,11 +206,11 @@ class JobController extends Controller
      */
     public function actionStatistics()
     {
-        $this->stdout(Yii::t('console', 'Queues Pending: {pending}', [
+        $this->stdout(Yii::t('resque', 'Queues Pending: {pending}', [
                 'pending' => $this->_resque->getJobsCount()
             ]) . PHP_EOL
         );
-        $this->stdout(Yii::t('console', 'Queues Scheduled: {scheduled}', [
+        $this->stdout(Yii::t('resque', 'Queues Scheduled: {scheduled}', [
                 'scheduled' => $this->_resque->getDelayedJobsCount()
             ]) . PHP_EOL
         );
@@ -205,11 +223,13 @@ class JobController extends Controller
     {
         // Command example
         //Yii::$app->yiiResque->createJob(DummyErrorAction::class, []);
-
+        $this->stdout(Yii::t('resque', 'Creating jobs dummy...') . PHP_EOL);
         $this->_resque->createJob(DummyErrorAction::class, []);
+        $this->_resque->createJob(DummyLongAction::class, ['duration' => 15]);
         $this->_resque->createJob(DummyAction::class, []);
         $this->_resque->enqueueJobIn(5, DummyAction::class, []);
         $this->_resque->enqueueJobIn(5, DummyErrorAction::class, []);
+        $this->stdout(Yii::t('resque', 'Jobs created, 3 normal and 2 scheduled') . PHP_EOL);
 
         /*// For debug in mainThread
         $workerScheduler = new \ResqueScheduler_Worker();

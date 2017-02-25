@@ -2,6 +2,9 @@
 
 namespace spiritdead\resque\components\actions;
 
+use spiritdead\resque\components\actions\base\ActionInterface;
+use spiritdead\resque\components\actions\base\BaseAction;
+
 /**
  * Class DummyJob
  * @package spiritdead\resque\components\actions

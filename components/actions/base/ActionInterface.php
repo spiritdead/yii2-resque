@@ -1,10 +1,10 @@
 <?php
 
-namespace spiritdead\resque\components\actions;
+namespace spiritdead\resque\components\actions\base;
 
 /**
  * Interface JobInterface
- * @package spiritdead\resque\components\actions
+ * @package spiritdead\resque\components\actions\base
  */
 interface ActionInterface
 {

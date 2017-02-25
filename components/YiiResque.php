@@ -87,6 +87,7 @@ class YiiResque extends Component
         $params = $args;
         unset($args);
         $args['params'] = $params;
+        unset($params);
 
         if (!isset($args[self::ACTION_META_KEY]) || !is_array($args[self::ACTION_META_KEY])) {
             $args[self::ACTION_META_KEY] = [];
@@ -154,6 +155,7 @@ class YiiResque extends Component
         $params = $args;
         unset($args);
         $args['params'] = $params;
+        unset($params);
 
         if (!isset($args[self::ACTION_META_KEY]) || !is_array($args[self::ACTION_META_KEY])) {
             $args[self::ACTION_META_KEY] = [];

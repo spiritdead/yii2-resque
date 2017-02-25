@@ -2,10 +2,12 @@
 
 namespace spiritdead\resque\controllers;
 
+use spiritdead\resque\components\actions\DummyLongAction;
 use spiritdead\resque\models\Job;
 use yii\web\Controller;
 use yii;
 use yii\filters\AccessControl;
+use yii\data\ActiveDataProvider;
 
 /**
  * Job controller for the `resque` module
@@ -43,12 +45,18 @@ class MonitorController extends Controller
      */
     public function actionIndex()
     {
+        Yii::$app->yiiResque->createJob(DummyLongAction::class,['duration' => 15]);
+
         $currentWorkers = Yii::$app->yiiResque->getWorkers();
         $currentWorkerSchedulers = Yii::$app->yiiResque->getWorkerSchedulers();
         $currentWorkers = array_merge($currentWorkers, $currentWorkerSchedulers);
-        $jobs = Job::find()->all();
+        $dataProvider = new ActiveDataProvider([
+            'query' => Job::find()->orderBy(['id' => SORT_DESC])->limit(5),
+            'pagination' => false
+        ]);
         return $this->render('index', [
-            'workers' => $currentWorkers
+            'workers' => $currentWorkers,
+            'dataProvider' => $dataProvider
         ]);
     }
 }
