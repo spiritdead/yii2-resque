@@ -1,6 +1,6 @@
 <?php
 
-namespace spiritdead\resque\commands;
+namespace spiritdead\yii2resque\commands;
 
 use spiritdead\resque\components\actions\DummyAction;
 use spiritdead\resque\components\actions\DummyLongAction;

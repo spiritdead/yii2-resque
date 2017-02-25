@@ -1,6 +1,6 @@
 <?php
 
-namespace spiritdead\resque\components;
+namespace spiritdead\yii2resque\components;
 
 use spiritdead\resque\components\base\AsyncActionJob;
 use spiritdead\resque\models\Job;

@@ -1,6 +1,6 @@
 <?php
 
-namespace spiritdead\resque\traits;
+namespace spiritdead\yii2resque\traits;
 
 use Yii;
 use yii\helpers\ArrayHelper;

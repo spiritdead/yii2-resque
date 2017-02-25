@@ -1,6 +1,6 @@
 <?php
 
-namespace spiritdead\resque\models;
+namespace spiritdead\yii2resque\models;
 
 use Yii;
 use common\models\User;

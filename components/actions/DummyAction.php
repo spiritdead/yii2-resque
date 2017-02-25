@@ -1,6 +1,6 @@
 <?php
 
-namespace spiritdead\resque\components\actions;
+namespace spiritdead\yii2resque\components\actions;
 
 use spiritdead\resque\components\actions\base\ActionInterface;
 use spiritdead\resque\components\actions\base\BaseAction;

@@ -1,6 +1,6 @@
 <?php
 
-namespace spiritdead\resque\components\actions\base;
+namespace spiritdead\yii2resque\components\actions\base;
 
 /**
  * Interface JobInterface

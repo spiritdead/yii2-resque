@@ -1,6 +1,6 @@
 <?php
 
-namespace spiritdead\resque\controllers;
+namespace spiritdead\yii2resque\controllers;
 
 use spiritdead\resque\components\actions\DummyLongAction;
 use spiritdead\resque\models\Job;

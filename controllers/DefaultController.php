@@ -1,6 +1,6 @@
 <?php
 
-namespace spiritdead\resque\controllers;
+namespace spiritdead\yii2resque\controllers;
 
 use yii\web\Controller;
 

@@ -1,6 +1,6 @@
 <?php
 
-namespace spiritdead\resque\migrations;
+namespace spiritdead\yii2resque\migrations;
 
 use yii\db\Schema;
 use yii\db\Migration;

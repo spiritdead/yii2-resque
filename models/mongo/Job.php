@@ -1,6 +1,6 @@
 <?php
 
-namespace spiritdead\resque\models\mongo;
+namespace spiritdead\yii2resque\models\mongo;
 
 use Yii;
 use yii\mongodb\ActiveRecord;

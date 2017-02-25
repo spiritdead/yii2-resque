@@ -1,6 +1,6 @@
 <?php
 
-namespace spiritdead\resque;
+namespace spiritdead\yii2resque;
 
 use spiritdead\resque\traits\TranslationTrait;
 use yii\base\Module as BaseModule;
