@@ -5,6 +5,7 @@ namespace spiritdead\yii2resque\commands;
 use spiritdead\resque\components\jobs\base\ResqueJobBase;
 use spiritdead\resque\components\workers\ResqueWorker;
 use spiritdead\resque\components\workers\ResqueWorkerScheduler;
+use spiritdead\resque\plugins\schedule\ResqueScheduler;
 use spiritdead\yii2resque\components\actions\DummyAction;
 use spiritdead\yii2resque\components\actions\DummyLongAction;
 use spiritdead\yii2resque\components\actions\DummyErrorAction;
@@ -12,6 +13,7 @@ use spiritdead\yii2resque\components\AsyncActionJob;
 use spiritdead\yii2resque\components\YiiResque;
 use Resque;
 use Resque_Worker;
+use spiritdead\yii2resque\models\Job;
 use yii\console\Controller;
 use yii;
 use yii\base\Module;
@@ -49,14 +51,18 @@ class JobController extends Controller
     public function actionProcess($queues = '*')
     {
         // Set various aliases
-        printf("Starting job process on queue %s\n", $queues);
+        $this->stdout(Yii::t('resque', 'Starting job process on queue {queue}',
+                ['queue' => $queues]) . PHP_EOL);
 
         // Instantiate the queues worker
         $queuesArray = explode(',', $queues);
-        $worker = new ResqueWorker($this->_resque->resqueInstance,$queuesArray);
+        $worker = new ResqueWorker($this->_resque->resqueInstance, $queuesArray);
         $console = $this;
         $processed = 0;
+        $this->_resque->resqueInstance->events->listen('beforePerform',
+            function (ResqueJobBase $job) use ($console, &$processed) {
 
+            });
         $this->_resque->resqueInstance->events->listen('afterPerform',
             function (ResqueJobBase $job) use ($console, &$processed) {
                 $processed++;
@@ -69,7 +75,8 @@ class JobController extends Controller
                     $classShort = $instance->result['class'];
                 }
                 $logText = Yii::t('resque',
-                        "Worker Job[{id}][{class}][{action}]: {success}\nQueue: {queue}\nMessage: {message}\nData: {data}", [
+                        "Worker Job[{id}][{class}][{action}]: {success}\nQueue: {queue}\nMessage: {message}\nData: {data}",
+                        [
                             'id' => $instance->_job->id,
                             'class' => $classShort,
                             'action' => $instance->result['action'],
@@ -102,19 +109,19 @@ class JobController extends Controller
                 }
 
                 if ($processed == 1) {
-                    $this->stdout("========================================================\n");
+                    $console->stdout("========================================================\n");
                 }
-                $this->stdout($logText);
-                $this->stdout($createdText);
+                $console->stdout($logText);
+                $console->stdout($createdText);
                 if ($instance->_job->scheduled) {
-                    $this->stdout($scheduledText);
+                    $console->stdout($scheduledText);
                 }
-                $this->stdout($executedText);
+                $console->stdout($executedText);
                 if (isset($instance->result['error'])) {
-                    $this->stdout($errorText);
+                    $console->stdout($errorText);
                 }
-                $this->stdout($pendingText);
-                $this->stdout("========================================================\n");
+                $console->stdout($pendingText);
+                $console->stdout("========================================================\n");
 
                 /*// Job arguments
                 $emailParams = [
@@ -142,24 +149,36 @@ class JobController extends Controller
     {
         $console = $this;
         // Set various aliases
-        $console->stdout("Starting scheduled job process" . PHP_EOL);
+        $this->stdout("Starting scheduled job process" . PHP_EOL);
 
         // Instantiate the queues worker
-        $workerScheduler = new ResqueWorkerScheduler($this->_resque->resqueInstance);
-        \Resque_Event::listen('beforeDelayedEnqueue', function ($queue, $class, $args) use ($console) {
-            $console->stdout(Yii::t('resque',
-                    'WorkerScheduler: Job scheduled ID[{id}]: was processed / Pending: {pending} / Queue: {queue}', [
-                        'id' => $args[0][YiiResque::ACTION_META_KEY]['id'],
-                        'queue' => $queue,
-                        'pending' => $console->_resque->getDelayedJobsCount()
-                    ]) . PHP_EOL);
-        });
-        \Resque_Event::listen('afterEnqueue', function ($class, $args, $queue) use ($console) {
-            $console->stdout(Yii::t('resque', 'WorkerScheduler: Job ID[{id}]: was enqueued in the queue [{queue}]', [
-                    'id' => $args[YiiResque::ACTION_META_KEY]['id'],
-                    'queue' => $queue
-                ]) . PHP_EOL);
-        });
+        if ($this->_resque->resqueInstance instanceof ResqueScheduler) {
+            $workerScheduler = new ResqueWorkerScheduler($this->_resque->resqueInstance);
+        } else {
+            $this->_resque->resqueInstance = new ResqueScheduler($this->_resque->resqueInstance->backend);
+            $workerScheduler = new ResqueWorkerScheduler($this->_resque->resqueInstance);
+        }
+
+        $this->_resque->resqueInstance->events->listen('beforeDelayedEnqueue',
+            function ($class, $args, $queue) use ($console) {
+                $console->stdout(Yii::t('resque',
+                        'WorkerScheduler: Job scheduled ID[{id}]: processed / Pending: {pending} / Queue: {queue}', [
+                            'id' => $args[0][YiiResque::ACTION_META_KEY]['id'],
+                            'queue' => $queue,
+                            'pending' => $console->_resque->getDelayedJobsCount()
+                        ]) . PHP_EOL);
+            });
+        $this->_resque->resqueInstance->events->listen('afterEnqueue',
+            function ($class, $args, $queue, $id) use ($console) {
+                $job = Job::findOne(['id' => $args[YiiResque::ACTION_META_KEY]['id']]);
+                $job->id_redis_job = $id;
+                $job->save();
+                $console->stdout(Yii::t('resque', 'WorkerScheduler: Job ID[{id}]: was enqueued in the queue [{queue}]',
+                        [
+                            'id' => $args[YiiResque::ACTION_META_KEY]['id'],
+                            'queue' => $queue
+                        ]) . PHP_EOL);
+            });
         // Start the worker
         $workerScheduler->work(2);
     }
@@ -190,7 +209,7 @@ class JobController extends Controller
                 $workerScheduler->unregisterWorker();
             }
         } elseif ($action == 'inactive') {
-            $workerPids = Resque_Worker::workerPids(); //are generics all of the PID of the computer
+            $workerPids = ResqueWorker::workerPids(); //are generics all of the PID of the computer
             $workers = array_merge($this->_resque->getWorkers(), $this->_resque->getWorkerSchedulers());
             foreach ($workers as $worker) {
                 if (is_object($worker)) {
@@ -235,7 +254,8 @@ class JobController extends Controller
         $this->_resque->createJob(DummyAction::class, []);
         $this->_resque->enqueueJobIn(5, DummyAction::class, []);
         $this->_resque->enqueueJobIn(5, DummyErrorAction::class, []);
-        $this->stdout(Yii::t('resque', "Jobs created\n1 normal(success,error)\n1 long(sucess)\n1 scheduled(success,error)") . PHP_EOL);
+        $this->stdout(Yii::t('resque',
+                "Jobs created\n1 normal(success,error)\n1 long(sucess)\n1 scheduled(success,error)") . PHP_EOL);
 
         /*// For debug in mainThread
         $workerScheduler = new \ResqueScheduler_Worker();

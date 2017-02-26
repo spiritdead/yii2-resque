@@ -3,9 +3,10 @@
 namespace spiritdead\yii2resque\components;
 
 use spiritdead\resque\components\workers\ResqueWorker;
+use spiritdead\resque\components\workers\ResqueWorkerScheduler;
 use spiritdead\resque\controllers\ResqueJobStatus;
 use spiritdead\resque\models\ResqueBackend;
-use spiritdead\resque\plugins\ResqueScheduler;
+use spiritdead\resque\plugins\schedule\ResqueScheduler;
 use spiritdead\resque\Resque;
 use spiritdead\yii2resque\models\Job;
 use spiritdead\yii2resque\models\mongo\Job as mongoJob;
@@ -46,11 +47,6 @@ class YiiResque extends Component
     public $password = '';
 
     /**
-     * @var string
-     */
-    public $prefix = '';
-
-    /**
      * @const string The array key to use for the action meta data.
      */
     const ACTION_META_KEY = '_action';
@@ -71,7 +67,6 @@ class YiiResque extends Component
             throw new InvalidConfigException("Please define the server and the port in the config of the component");
         }
         $this->resqueInstance = new Resque(new ResqueBackend($this->server, $this->port, $this->database));
-        $this->resqueInstance->redis->prefix($this->prefix);
     }
 
     /**
@@ -107,7 +102,7 @@ class YiiResque extends Component
         $mongoJob->class = $class;
         $mongoJob->action = $jobAction;
         $mongoJob->data = (array)$args;
-        if($mongoJob->save()) {
+        if ($mongoJob->save()) {
             $job->id_mongo = (string)$mongoJob->_id;
             $job->queue = $queue;
             if ($job->save()) {
@@ -115,7 +110,7 @@ class YiiResque extends Component
                     'id' => $job->id,
                 ]);
                 $job->id_redis_job = $this->resqueInstance->enqueue($queue, self::JOB_CLASS, $args, $track_status);
-                if($job->update()){
+                if ($job->update()) {
                     return $job->id_redis_job;
                 }
             }
@@ -141,7 +136,7 @@ class YiiResque extends Component
         $jobAction = 'process',
         $queue = AsyncActionJob::QUEUE_NAME
     ) {
-        return self::enqueueJobAt(time() + $in, $class, $args, $jobAction, $queue);
+        return $this->enqueueJobAt(time() + $in, $class, $args, $jobAction, $queue);
     }
 
     /**
@@ -181,14 +176,20 @@ class YiiResque extends Component
         $mongoJob->class = $class;
         $mongoJob->action = $jobAction;
         $mongoJob->data = (array)$args;
-        if($mongoJob->save()) {
+        if ($mongoJob->save()) {
             $job->id_mongo = (string)$mongoJob->_id;
             $job->queue = $queue;
             if ($job->save()) {
                 $args[self::ACTION_META_KEY] = ArrayHelper::merge($args[self::ACTION_META_KEY], [
                     'id' => $job->id,
                 ]);
-                return \ResqueScheduler::enqueueAt($at, $queue, self::JOB_CLASS, $args);
+                if ($this->resqueInstance instanceof ResqueScheduler) {
+                    $this->resqueInstance->enqueueAt($at, $queue, self::JOB_CLASS, $args);
+                } else {
+                    $resque = new ResqueScheduler($this->resqueInstance->backend);
+                    $resque->enqueueAt($at, $queue, self::JOB_CLASS, $args);
+                }
+                return true;
             }
         }
         return false;
@@ -223,7 +224,7 @@ class YiiResque extends Component
      */
     public function status($token)
     {
-        $status = new ResqueJobStatus($this->resqueInstance,$token);
+        $status = new ResqueJobStatus($this->resqueInstance, $token);
         return $status->get();
     }
 
@@ -285,7 +286,7 @@ class YiiResque extends Component
 
     /**
      * @param string $id
-     * @return ResqueWorker|ResqueWorker[]
+     * @return ResqueWorker|ResqueWorker[]|null
      */
     public function getWorkers($id = '')
     {
@@ -301,14 +302,18 @@ class YiiResque extends Component
 
     /**
      * @param string $id
-     * @return \ResqueScheduler_Worker[]|\ResqueScheduler_Worker|null
+     * @return ResqueWorkerScheduler[]|ResqueWorkerScheduler|null
      */
     public function getWorkerSchedulers($id = '')
     {
-        if (empty($id)) {
-            return \ResqueScheduler_Worker::all();
+        $instance = $this->resqueInstance;
+        if($instance instanceof Resque){
+            $instance = new ResqueScheduler($instance->backend);
         }
-        $worker = \ResqueScheduler_Worker::find($id);
+        if (empty($id)) {
+            return ResqueWorkerScheduler::all($instance);
+        }
+        $worker = ResqueWorkerScheduler::find($instance, $id);
         if (!$worker) {
             return $worker;
         }
