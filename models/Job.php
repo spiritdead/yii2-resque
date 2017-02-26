@@ -13,6 +13,8 @@ use yii\db\ActiveRecord;
  * @property integer $id
  * @property integer $user_id
  * @property string $id_mongo
+ * @property string $id_redis_job
+ * @property string $queue
  * @property integer $created_at
  * @property integer $result
  * @property string $result_message
@@ -70,8 +72,9 @@ class Job extends \yii\db\ActiveRecord
     {
         return [
             [['user_id', 'created_at', 'result', 'executed_at', 'scheduled', 'scheduled_at'], 'integer'],
+            [['id_mongo', 'queue'], 'required'],
             [['result_message'], 'string'],
-            [['id_mongo'], 'string', 'max' => 255],
+            [['id_mongo', 'id_redis_job', 'queue'], 'string', 'max' => 255],
             [
                 ['user_id'],
                 'exist',
@@ -91,6 +94,8 @@ class Job extends \yii\db\ActiveRecord
             'id' => Yii::t('resque', 'ID'),
             'user_id' => Yii::t('resque', 'User ID'),
             'id_mongo' => Yii::t('resque', 'Id Mongo'),
+            'id_radis_job' => Yii::t('resque', 'Redis Job ID'),
+            'queue' => Yii::t('resque', 'Queue'),
             'created_at' => Yii::t('resque', 'Created At'),
             'result' => Yii::t('resque', 'Result'),
             'result_message' => Yii::t('resque', 'Result Message'),

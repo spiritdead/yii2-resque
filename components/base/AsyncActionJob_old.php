@@ -17,7 +17,7 @@ use yii\helpers\ArrayHelper;
  * Class AsyncActionJob
  * @package spiritdead\yii2resque\components\base
  */
-class AsyncActionJob extends baseJob implements JobInterface
+class AsyncActionJob_old extends baseJob implements JobInterface
 {
     /**
      * @const string name of the queue to process jobs

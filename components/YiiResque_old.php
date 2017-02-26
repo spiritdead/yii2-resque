@@ -2,15 +2,14 @@
 
 namespace spiritdead\yii2resque\components;
 
-use spiritdead\resque\components\workers\ResqueWorker;
-use spiritdead\resque\controllers\ResqueJobStatus;
-use spiritdead\resque\models\ResqueBackend;
-use spiritdead\resque\plugins\ResqueScheduler;
-use spiritdead\resque\Resque;
+use spiritdead\yii2resque\components\base\AsyncAction2Job;
+use spiritdead\yii2resque\components\base\AsyncActionJob;
 use spiritdead\yii2resque\models\Job;
 use spiritdead\yii2resque\models\mongo\Job as mongoJob;
 use yii\base\Component;
-use yii;
+use Yii;
+use Resque;
+use Resque_Job_Status;
 use yii\base\InvalidConfigException;
 use yii\helpers\ArrayHelper;
 
@@ -18,13 +17,8 @@ use yii\helpers\ArrayHelper;
  * Class YiiResque
  * @package spiritdead\yii2resque\components
  */
-class YiiResque extends Component
+class YiiResque_old extends Component
 {
-    /**
-     * @var null|Resque|ResqueScheduler
-     */
-    public $resqueInstance = null;
-
     /**
      * @var string Redis server address
      */
@@ -45,20 +39,17 @@ class YiiResque extends Component
      */
     public $password = '';
 
-    /**
-     * @var string
-     */
+
     public $prefix = '';
 
     /**
      * @const string The array key to use for the action meta data.
      */
     const ACTION_META_KEY = '_action';
-
     /**
      * @const string The async job class
      */
-    const JOB_CLASS = AsyncActionJob::class;
+    const JOB_CLASS = AsyncAction2Job::class;
 
     /**
      * Initializes the connection.
@@ -70,8 +61,12 @@ class YiiResque extends Component
         if ($this->server === null || $this->port === null) {
             throw new InvalidConfigException("Please define the server and the port in the config of the component");
         }
-        $this->resqueInstance = new Resque(new ResqueBackend($this->server, $this->port, $this->database));
-        $this->resqueInstance->redis->prefix($this->prefix);
+
+        Resque::setBackend($this->server . ':' . $this->port);
+        if ($this->prefix) {
+            Resque::redis()->prefix($this->prefix);
+        }
+
     }
 
     /**
@@ -107,20 +102,54 @@ class YiiResque extends Component
         $mongoJob->class = $class;
         $mongoJob->action = $jobAction;
         $mongoJob->data = (array)$args;
-        if($mongoJob->save()) {
-            $job->id_mongo = (string)$mongoJob->_id;
-            $job->queue = $queue;
-            if ($job->save()) {
-                $args[self::ACTION_META_KEY] = ArrayHelper::merge($args[self::ACTION_META_KEY], [
-                    'id' => $job->id,
-                ]);
-                $job->id_redis_job = $this->resqueInstance->enqueue($queue, self::JOB_CLASS, $args, $track_status);
-                if($job->update()){
-                    return $job->id_redis_job;
-                }
-            }
+        $mongoJob->save();
+        $job->id_mongo = (string)$mongoJob->_id;
+        if ($job->save()) {
+            $args[self::ACTION_META_KEY] = ArrayHelper::merge($args[self::ACTION_META_KEY], [
+                'id' => $job->id,
+            ]);
+            return Resque::enqueue($queue, self::JOB_CLASS, $args, $track_status);
+        } else {
+            return false;
         }
-        return false;
+    }
+
+    public function createJob2(
+        $class,
+        $args = [],
+        $jobAction = 'process',
+        $queue = AsyncActionJob::QUEUE_NAME,
+        $track_status = false
+    ) {
+        $params = $args;
+        unset($args);
+        $args['params'] = $params;
+        unset($params);
+
+        if (!isset($args[self::ACTION_META_KEY]) || !is_array($args[self::ACTION_META_KEY])) {
+            $args[self::ACTION_META_KEY] = [];
+        }
+
+        $job = new Job();
+        if (isset(Yii::$app->user) && !Yii::$app->user->isGuest) {
+            $job->user_id = Yii::$app->user->id;
+        }
+        $mongoJob = new mongoJob();
+        $mongoJob->class = $class;
+        $mongoJob->action = $jobAction;
+        $mongoJob->data = (array)$args;
+        $mongoJob->save();
+        $job->id_mongo = (string)$mongoJob->_id;
+        if ($job->save()) {
+            $args[self::ACTION_META_KEY] = ArrayHelper::merge($args[self::ACTION_META_KEY], [
+                'id' => $job->id,
+            ]);
+            $test = new \spiritdead\resque\Resque();
+            return $test->enqueue($queue,self::JOB_CLASS, $args,$track_status);
+
+        } else {
+            return false;
+        }
     }
 
     /**
@@ -181,17 +210,16 @@ class YiiResque extends Component
         $mongoJob->class = $class;
         $mongoJob->action = $jobAction;
         $mongoJob->data = (array)$args;
-        if($mongoJob->save()) {
-            $job->id_mongo = (string)$mongoJob->_id;
-            $job->queue = $queue;
-            if ($job->save()) {
-                $args[self::ACTION_META_KEY] = ArrayHelper::merge($args[self::ACTION_META_KEY], [
-                    'id' => $job->id,
-                ]);
-                return \ResqueScheduler::enqueueAt($at, $queue, self::JOB_CLASS, $args);
-            }
+        $mongoJob->save();
+        $job->id_mongo = (string)$mongoJob->_id;
+        if ($job->save()) {
+            $args[self::ACTION_META_KEY] = ArrayHelper::merge($args[self::ACTION_META_KEY], [
+                'id' => $job->id,
+            ]);
+            return \ResqueScheduler::enqueueAt($at, $queue, self::JOB_CLASS, $args);
+        } else {
+            return false;
         }
-        return false;
     }
 
     /**
@@ -201,7 +229,7 @@ class YiiResque extends Component
      */
     public function getDelayedJobsCount()
     {
-        return (int)$this->resqueInstance->redis->zcard('delayed_queue_schedule');
+        return (int)Resque::redis()->zcard('delayed_queue_schedule');
     }
 
     /**
@@ -211,7 +239,8 @@ class YiiResque extends Component
      */
     public function getJobsCount($queue = AsyncActionJob::QUEUE_NAME)
     {
-        return (int)$this->resqueInstance->redis->llen('queue:' . $queue);
+        //return (int)Resque::redis()->zcard(AsyncActionJob::QUEUE_NAME);
+        return (int)Resque::redis()->llen('queue:' . $queue);
     }
 
     /**
@@ -223,8 +252,18 @@ class YiiResque extends Component
      */
     public function status($token)
     {
-        $status = new ResqueJobStatus($this->resqueInstance,$token);
+        $status = new Resque_Job_Status($token);
         return $status->get();
+    }
+
+    /**
+     * Return Redis
+     *
+     * @return object Redis instance
+     */
+    public function redis()
+    {
+        return Resque::redis();
     }
 
     /**
@@ -233,7 +272,7 @@ class YiiResque extends Component
      */
     public function queueCount($queueName = AsyncActionJob::QUEUE_NAME)
     {
-        return $this->resqueInstance->size($queueName);
+        return Resque::size($queueName);
     }
 
     /**
@@ -243,7 +282,7 @@ class YiiResque extends Component
      */
     public function getQueues()
     {
-        return $this->resqueInstance->queues();
+        return Resque::queues();
     }
 
     /**
@@ -260,14 +299,14 @@ class YiiResque extends Component
     public function deleteJob($queue, $worker_class = null, $job_key = null)
     {
         if (!empty($job_key) && !empty($worker_class)) {
-            return $this->resqueInstance->dequeue($queue, [$worker_class => $job_key]);
+            return Resque::dequeue($queue, [$worker_class => $job_key]);
         } // Remove job with specific job key
         else {
             if (!empty($worker_class) && empty($job_key)) {
-                return $this->resqueInstance->dequeue($queue, [$worker_class]);
+                return Resque::dequeue($queue, [$worker_class]);
             } // Remove all jobs inside specified worker and queue
             else {
-                return $this->resqueInstance->dequeue($queue);
+                return Resque::dequeue($queue);
             }
         } // Remove all jobs inside queue
     }
@@ -280,19 +319,19 @@ class YiiResque extends Component
      */
     public function removeQueue($queue)
     {
-        return $this->resqueInstance->removeQueue($queue);
+        return Resque::removeQueue($queue);
     }
 
     /**
      * @param string $id
-     * @return ResqueWorker|ResqueWorker[]
+     * @return \Resque_Worker[]|\Resque_Worker|null
      */
     public function getWorkers($id = '')
     {
         if (empty($id)) {
-            return ResqueWorker::all($this->resqueInstance);
+            return \Resque_Worker::all();
         }
-        $worker = ResqueWorker::find($this->resqueInstance, $id);
+        $worker = \Resque_Worker::find($id);
         if (!$worker) {
             return $worker;
         }

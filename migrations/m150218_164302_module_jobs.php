@@ -19,13 +19,15 @@ class m150218_164302_module_jobs extends Migration
         $this->createTable('job', [
             'id' => Schema::TYPE_PK,
             'user_id' => Schema::TYPE_INTEGER,
-            'id_mongo' => Schema::TYPE_STRING,
+            'id_mongo' => Schema::TYPE_STRING . ' NOT NULL',
+            'id_redis_job' => Schema::TYPE_STRING,
+            'queue' => Schema::TYPE_STRING . ' NOT NULL',
             'created_at' => Schema::TYPE_INTEGER . '(11) NOT NULL',
-            'result' => Schema::TYPE_INTEGER,
+            'result' => Schema::TYPE_INTEGER . ' DEFAULT 0',
             'result_message' => Schema::TYPE_TEXT,
             'executed_at' => Schema::TYPE_INTEGER . '(11)',
             'scheduled' => Schema::TYPE_BOOLEAN . ' DEFAULT false',
-            'scheduled_at' => Schema::TYPE_BOOLEAN . '(11)',
+            'scheduled_at' => Schema::TYPE_INTEGER . '(11)',
         ], $tableOptions);
 
         $this->createTable('log_job', [
