@@ -10,7 +10,7 @@ common/config/main.php
 'components' => [
     ...
     'yiiResque' => [
-        'class' => 'spiritdead\resque\components\YiiResque',
+        'class' => 'spiritdead\yii2resque\components\YiiResque',
         'server' => 'localhost',
         'port' => '6379'
     ],
@@ -28,7 +28,7 @@ backend/config/main.php and console/config/main.php for use the commands
 'modules' => [
     ...
     'resque' => [
-        'class' => 'spiritdead\resque\Module',
+        'class' => 'spiritdead\yii2resque\Module',
         'layout' => '',
         'layoutAlias' => ''
     ],
@@ -43,7 +43,7 @@ return [
         'migrate' => [
             'class' => 'yii\console\controllers\MigrateController',
             'migrationNamespaces' => [
-                'spiritdead\resque\migrations'
+                'spiritdead\yii2resque\migrations'
             ],
             //'migrationPath' => null, // allows to disable not namespaced migration completely
         ],

@@ -9,11 +9,6 @@
       "email": "mundofreakuc@gmail.com"
     }
   ],
-  "autoload": {
-    "psr-4": {
-      "spiritdead\\yii2resque\\": ""
-    }
-  },
   "repositories": [
     {
       "type": "vcs",
@@ -22,5 +17,10 @@
   ],
   "require": {
     "spiritdead/resque": "dev-master"
+  },
+  "autoload": {
+    "psr-4": {
+      "spiritdead\\yii2resque\\": ""
+    }
   }
 }
