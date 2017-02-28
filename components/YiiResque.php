@@ -3,7 +3,7 @@
 namespace spiritdead\yii2resque\components;
 
 use spiritdead\resque\components\workers\ResqueWorker;
-use spiritdead\resque\components\workers\ResqueWorkerScheduler;
+use spiritdead\resque\plugins\schedule\workers\ResqueWorkerScheduler;
 use spiritdead\resque\controllers\ResqueJobStatus;
 use spiritdead\resque\models\ResqueBackend;
 use spiritdead\resque\plugins\schedule\ResqueScheduler;

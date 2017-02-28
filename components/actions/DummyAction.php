@@ -5,7 +5,6 @@ namespace spiritdead\yii2resque\components\actions;
 use spiritdead\yii2resque\components\actions\base\ActionInterface;
 use spiritdead\yii2resque\components\actions\base\BaseAction;
 
-
 /**
  * Class DummyJob
  * @package spiritdead\yii2resque\components\actions

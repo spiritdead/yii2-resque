@@ -44,6 +44,9 @@ class LogJob extends \yii\db\ActiveRecord
         return 'log_job';
     }
 
+    /**
+     * @return array
+     */
     public function behaviors()
     {
         return [
@@ -59,12 +62,19 @@ class LogJob extends \yii\db\ActiveRecord
         ];
     }
 
+    /**
+     * Override afterFind
+     */
     public function afterFind()
     {
         $this->data = json_decode($this->data);
         return parent::afterFind();
     }
 
+    /**
+     * Override beforeValidate
+     * @return bool
+     */
     public function beforeValidate()
     {
         if (!(is_string($this->data) && is_object(json_decode($this->data)) && (json_last_error() == JSON_ERROR_NONE))) {
@@ -73,6 +83,11 @@ class LogJob extends \yii\db\ActiveRecord
         return parent::beforeValidate();
     }
 
+    /**
+     * Override afterSave
+     * @param bool $insert
+     * @param array $changedAttributed
+     */
     public function afterSave($insert, $changedAttributed)
     {
         if (is_string($this->data)) {

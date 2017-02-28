@@ -5,6 +5,10 @@ namespace spiritdead\yii2resque\migrations;
 use yii\db\Schema;
 use yii\db\Migration;
 
+/**
+ * Class m150218_164302_module_jobs
+ * @package spiritdead\yii2resque\migrations
+ */
 class m150218_164302_module_jobs extends Migration
 {
     public function up()

@@ -2,10 +2,10 @@
 
 namespace spiritdead\yii2resque\components\base;
 
+use spiritdead\resque\exceptions\base\ResqueException;
+use spiritdead\resque\exceptions\ResqueJobForceExitException;
 use spiritdead\yii2resque\models\LogJob;
 use spiritdead\yii2resque\models\Job as modelJob;
-use Resque_Job_DontPerform;
-use Resque_Exception;
 
 /**
  * Class Job
@@ -33,8 +33,8 @@ class Job
      * @param string $error
      * @param bool $raise
      * @param array $throw
-     * @throws Resque_Exception
-     * @throws Resque_Job_DontPerform
+     * @throws ResqueException
+     * @throws ResqueJobForceExitException
      */
     public function logError($category, $job_id, $success, $data, $raise = true, $throw = [])
     {
@@ -44,9 +44,9 @@ class Job
         if ($raise) {
             switch ($category) {
                 case LogJob::CATEGORY_ERROR_DONTPERFORM:
-                    throw new Resque_Job_DontPerform();
+                    throw new ResqueJobForceExitException();
                 case LogJob::CATEGORY_RUNTIME_EXCEPTION:
-                    throw new Resque_Exception();
+                    throw new ResqueException();
             }
         }
     }

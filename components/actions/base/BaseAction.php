@@ -8,6 +8,9 @@ namespace spiritdead\yii2resque\components\actions\base;
  */
 class BaseAction
 {
+    /**
+     * BaseAction constructor.
+     */
     public function __construct()
     {
 

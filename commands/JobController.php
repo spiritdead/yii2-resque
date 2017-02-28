@@ -4,15 +4,13 @@ namespace spiritdead\yii2resque\commands;
 
 use spiritdead\resque\components\jobs\base\ResqueJobBase;
 use spiritdead\resque\components\workers\ResqueWorker;
-use spiritdead\resque\components\workers\ResqueWorkerScheduler;
+use spiritdead\resque\plugins\schedule\workers\ResqueWorkerScheduler;
 use spiritdead\resque\plugins\schedule\ResqueScheduler;
 use spiritdead\yii2resque\components\actions\DummyAction;
 use spiritdead\yii2resque\components\actions\DummyLongAction;
 use spiritdead\yii2resque\components\actions\DummyErrorAction;
 use spiritdead\yii2resque\components\AsyncActionJob;
 use spiritdead\yii2resque\components\YiiResque;
-use Resque;
-use Resque_Worker;
 use spiritdead\yii2resque\models\Job;
 use yii\console\Controller;
 use yii;
@@ -190,7 +188,7 @@ class JobController extends Controller
     {
         if ($action == 'delete') {
             $this->stdout(Yii::t('resque', 'Cleaning Queues...') . PHP_EOL);
-            foreach (Resque::queues() as $queueName) {
+            foreach ($this->_resque->getQueues() as $queueName) {
                 if ($queueName != AsyncActionJob::QUEUE_NAME) {
                     $this->stdout(Yii::t('resque', 'Queue {queue} deleted', ['queue' => $queueName]) . PHP_EOL);
                     $this->_resque->removeQueue($queueName);

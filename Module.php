@@ -57,6 +57,10 @@ class Module extends BaseModule implements yii\base\BootstrapInterface
         // Custom initialization code goes here
     }
 
+    /**
+     * Load custom layout
+     * @return string
+     */
     public function getLayoutPath()
     {
         if ($this->layoutAlias === null || empty($this->layoutAlias)) {

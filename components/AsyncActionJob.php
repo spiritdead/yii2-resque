@@ -179,7 +179,7 @@ class AsyncActionJob extends ResqueJob implements ResqueJobInterface
     }
 
     /**
-     *
+     * After Perform
      */
     public function tearDown()
     {
