@@ -3,6 +3,7 @@
 namespace spiritdead\yii2resque\commands;
 
 use spiritdead\resque\components\jobs\base\ResqueJobBase;
+use spiritdead\resque\components\workers\base\ResqueWorkerBase;
 use spiritdead\resque\components\workers\ResqueWorker;
 use spiritdead\resque\plugins\schedule\workers\ResqueWorkerScheduler;
 use spiritdead\resque\plugins\schedule\ResqueScheduler;
@@ -60,6 +61,56 @@ class JobController extends Controller
         $this->_resque->resqueInstance->events->listen('beforePerform',
             function (ResqueJobBase $job) use ($console, &$processed) {
 
+            }
+        );
+        $this->_resque->resqueInstance->events->listen('onFailure',
+            function ($e, ResqueJobBase $job) use ($console, &$processed) {
+                $processed++;
+                /* @var AsyncActionJob $instance */
+                $instance = $job->getInstance();
+                /* @var $e \Exception */
+                $classShort = explode('\\', $instance->_jobMongo['class']);
+                if (count($classShort) > 0) {
+                    $classShort = $classShort[count($classShort) - 1];
+                } else {
+                    $classShort = $instance->result['class'];
+                }
+                $logText = Yii::t('resque',
+                        "Worker Job[{id}][{class}][{action}]: {success}\nQueue: {queue}\nMessage: {message}\nData: {data}",
+                        [
+                            'id' => $instance->_job->id,
+                            'class' => $classShort,
+                            'action' => $instance->_jobMongo['action'],
+                            'success' => $instance->result['success'] ? 'Success' : 'Error',
+                            'queue' => $instance->_job->queue,
+                            'message' => $instance->result['message'],
+                            'data' => json_encode($instance->args)
+                        ]) . PHP_EOL;
+                $errorText = Yii::t('resque', "Exception: {messageError} / line {lineError}", [
+                        'messageError' => $e->getMessage(),
+                        'lineError' => $e->getLine()
+                    ]) . PHP_EOL;
+                if ($processed == 1) {
+                    $console->stdout("========================================================\n");
+                }
+                $console->stdout($logText);
+                $console->stdout($errorText);
+                $console->stdout("========================================================\n");
+
+                /*// Job arguments
+                    $emailParams = [
+                        'args' => $this->args,
+                        'exception' => $exception,
+                        'job' => $job,
+                    ];
+                    $debug = VarDumper::export($emailParams);
+
+                    // Send the email notification
+                    Yii::$app->mailer->compose('jobReport', ['debug' => $debug])
+                        ->setFrom([Yii::$app->params['supportEmail'] => Yii::t('app', 'Alerts')])
+                        ->setTo(Yii::$app->params['notificationEmail'])
+                        ->setSubject(Yii::t('app', 'Bug report: Job has crashed ({0})', [strtoupper(YII_ENV)]))
+                        ->send();*/
             });
         $this->_resque->resqueInstance->events->listen('afterPerform',
             function (ResqueJobBase $job) use ($console, &$processed) {
@@ -120,21 +171,6 @@ class JobController extends Controller
                 }
                 $console->stdout($pendingText);
                 $console->stdout("========================================================\n");
-
-                /*// Job arguments
-                $emailParams = [
-                    'args' => $this->args,
-                    'exception' => $exception,
-                    'job' => $job,
-                ];
-                $debug = VarDumper::export($emailParams);
-
-                // Send the email notification
-                Yii::$app->mailer->compose('jobReport', ['debug' => $debug])
-                    ->setFrom([Yii::$app->params['supportEmail'] => Yii::t('app', 'Alerts')])
-                    ->setTo(Yii::$app->params['notificationEmail'])
-                    ->setSubject(Yii::t('app', 'Bug report: Job has crashed ({0})', [strtoupper(YII_ENV)]))
-                    ->send();*/
             });
         // Start the worker
         $worker->work(2);
@@ -195,20 +231,16 @@ class JobController extends Controller
                 }
             }
             $this->stdout(Yii::t('resque', 'Cleaning Workers...') . PHP_EOL);
-            $workers = $this->_resque->getWorkers();
-            $workerSchedulers = $this->_resque->getWorkerSchedulers();
+            $workers = array_merge($this->_resque->getWorkers(), $this->_resque->getWorkerSchedulers());
+            /* @var $worker ResqueWorker | ResqueScheduler */
             foreach ($workers as $worker) {
                 $this->stdout(Yii::t('resque', 'Worker {worker} deleted', ['worker' => $worker]) . PHP_EOL);
                 $worker->unregisterWorker();
             }
-            foreach ($workerSchedulers as $workerScheduler) {
-                $this->stdout(Yii::t('resque', 'Worker scheduler {worker} deleted',
-                        ['worker' => $workerScheduler]) . PHP_EOL);
-                $workerScheduler->unregisterWorker();
-            }
         } elseif ($action == 'inactive') {
             $workerPids = ResqueWorker::workerPids(); //are generics all of the PID of the computer
             $workers = array_merge($this->_resque->getWorkers(), $this->_resque->getWorkerSchedulers());
+            /* @var $worker ResqueWorker | ResqueScheduler */
             foreach ($workers as $worker) {
                 if (is_object($worker)) {
                     list($host, $pid, $queues) = explode(':', (string)$worker, 3);
@@ -237,6 +269,12 @@ class JobController extends Controller
                 'scheduled' => $this->_resque->getDelayedJobsCount()
             ]) . PHP_EOL
         );
+        $workers = array_merge($this->_resque->getWorkers(), $this->_resque->getWorkerSchedulers());
+        foreach ($workers as $worker) {
+            if (is_object($worker)) {
+                $this->stdout(Yii::t('resque', 'Worker {worker} found', ['worker' => $worker]) . PHP_EOL);
+            }
+        }
     }
 
     /**
@@ -245,20 +283,20 @@ class JobController extends Controller
     public function actionTest()
     {
         // Command example
-        //Yii::$app->yiiResque->createJob(DummyErrorAction::class, []);
         $this->stdout(Yii::t('resque', 'Creating jobs dummy...') . PHP_EOL);
+        Yii::$app->yiiResque->createJob(DummyErrorAction::class, []);
         $this->_resque->createJob(DummyErrorAction::class, []);
         $this->_resque->createJob(DummyLongAction::class, ['duration' => 15]);
+        $this->_resque->createJob(DummyLongAction::class, []); //'duration' => 15
         $this->_resque->createJob(DummyAction::class, []);
         $this->_resque->enqueueJobIn(5, DummyAction::class, []);
         $this->_resque->enqueueJobIn(5, DummyErrorAction::class, []);
-        $this->stdout(Yii::t('resque',
-                "Jobs created\n1 normal(success,error)\n1 long(sucess)\n1 scheduled(success,error)") . PHP_EOL);
+        $this->stdout(Yii::t('resque', "6 Jobs dummy created") . PHP_EOL);
 
         /*// For debug in mainThread
-        $workerScheduler = new \ResqueScheduler_Worker();
+        $workerScheduler = new ResqueWorkerScheduler(new ResqueScheduler());
         $workerScheduler->handleDelayedItems();
-        $worker = new \Resque_Worker(['*']);
+        $worker = new ResqueWorker(Yii::$app->resque->resqueInstance,['*']);
         // Start the worker
         $worker->work(2);*/
     }

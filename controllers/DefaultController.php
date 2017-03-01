@@ -2,6 +2,9 @@
 
 namespace spiritdead\yii2resque\controllers;
 
+use spiritdead\resque\components\workers\ResqueWorker;
+use spiritdead\resque\plugins\schedule\ResqueScheduler;
+use spiritdead\resque\plugins\schedule\workers\ResqueWorkerScheduler;
 use yii\filters\AccessControl;
 use yii\web\Controller;
 use yii;
@@ -42,8 +45,7 @@ class DefaultController extends Controller
      */
     public function actionIndex()
     {
-        //Yii::$app->yiiResque->createJob(DummyAction::class, [], 'process');
-        //Yii::$app->yiiResque->enqueueJobIn(5, DummyAction::class, []);
+        $a = Yii::$app->yiiResque->getWorkers();
         return $this->render('index');
     }
 }
