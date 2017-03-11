@@ -1,23 +1,24 @@
 <?php
 
 use yii\web\View;
-use yii\helpers\Html;
+use spiritdead\resque\components\workers\base\ResqueWorkerBase;
+use spiritdead\resque\plugins\schedule\ResqueScheduler;
 use spiritdead\yii2resque\components\YiiResque;
 use spiritdead\yii2resque\models\Job;
 use spiritdead\yii2resque\models\mongo\Job as mongoJob;
 
 /* @var $this yii\web\View */
-/* @var $worker \Resque_Worker */
+/* @var $worker ResqueWorkerBase */
 $processed = $worker->getStat('processed');
 $failed = $worker->getStat('failed');
 $success = $processed - $failed;
 $queues = [];
-if ($worker instanceof ResqueScheduler_Worker) {
+if ($worker instanceof ResqueScheduler) {
     $queues = ['schedule'];
 } else {
     $queues = $worker->queues(false);
 }
-$job = $worker->job();
+$job = $worker->currentJob;
 $jobID = '';
 if(isset($job['payload']['args'][0][YiiResque::ACTION_META_KEY]['id'])) {
     $jobID = $job['payload']['args'][0][YiiResque::ACTION_META_KEY]['id'];

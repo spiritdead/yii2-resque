@@ -66,7 +66,16 @@ class YiiResque extends Component
         if ($this->server === null || $this->port === null) {
             throw new InvalidConfigException("Please define the server and the port in the config of the component");
         }
-        $this->resqueInstance = new Resque(new ResqueBackend($this->server, $this->port, $this->database));
+        $this->resqueInstance = new Resque(
+            new ResqueBackend(
+                $this->server,
+                $this->port,
+                $this->database,
+                ResqueBackend::DEFAULT_NAMESPACE_REDIS,
+                ResqueBackend::DEFAULT_NAMESPACE_WORKERS,
+                false
+            )
+        );
     }
 
     /**
@@ -107,10 +116,11 @@ class YiiResque extends Component
             $job->queue = $queue;
             if ($job->save()) {
                 $args[self::ACTION_META_KEY] = ArrayHelper::merge($args[self::ACTION_META_KEY], [
-                    'id' => $job->id,
+                    'id' => $job->id
                 ]);
+                $mongoJob->data = (array)$args;
                 $job->id_redis_job = $this->resqueInstance->enqueue($queue, self::JOB_CLASS, $args, $track_status);
-                if ($job->update()) {
+                if ($job->update() && $mongoJob->update()) {
                     return $job->id_redis_job;
                 }
             }
@@ -183,6 +193,8 @@ class YiiResque extends Component
                 $args[self::ACTION_META_KEY] = ArrayHelper::merge($args[self::ACTION_META_KEY], [
                     'id' => $job->id,
                 ]);
+                $mongoJob->data = (array)$args;
+                $mongoJob->update();
                 if ($this->resqueInstance instanceof ResqueScheduler) {
                     $this->resqueInstance->enqueueAt($at, $queue, self::JOB_CLASS, $args);
                 } else {
@@ -307,7 +319,7 @@ class YiiResque extends Component
     public function getWorkerSchedulers($id = '')
     {
         $instance = $this->resqueInstance;
-        if($instance instanceof Resque){
+        if ($instance instanceof Resque) {
             $instance = new ResqueScheduler($instance->backend);
         }
         if (empty($id)) {

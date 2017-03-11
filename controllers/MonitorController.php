@@ -2,7 +2,8 @@
 
 namespace spiritdead\yii2resque\controllers;
 
-use spiritdead\yii2resque\components\actions\DummyLongAction;
+use spiritdead\resque\components\filters\AjaxControl;
+use spiritdead\yii2resque\components\actions\DummyAction;
 use spiritdead\yii2resque\models\Job;
 use yii\web\Controller;
 use yii;
@@ -33,8 +34,11 @@ class MonitorController extends Controller
                             return ($roleName == 'admin');
                         }
                     ],
-
                 ],
+            ],
+            'ajax' => [
+                'class' => AjaxControl::className(),
+                'only' => ['statistics']
             ]
         ];
     }
@@ -45,8 +49,7 @@ class MonitorController extends Controller
      */
     public function actionIndex()
     {
-        Yii::$app->yiiResque->createJob(DummyLongAction::class,['duration' => 15]);
-
+        Yii::$app->yiiResque->createJob(DummyAction::class, []);
         $currentWorkers = Yii::$app->yiiResque->getWorkers();
         $currentWorkerSchedulers = Yii::$app->yiiResque->getWorkerSchedulers();
         $currentWorkers = array_merge($currentWorkers, $currentWorkerSchedulers);
@@ -58,5 +61,16 @@ class MonitorController extends Controller
             'workers' => $currentWorkers,
             'dataProvider' => $dataProvider
         ]);
+    }
+
+    /**
+     *
+     */
+    public function actionWorkers() {
+
+    }
+
+    public function actionStatistics() {
+
     }
 }

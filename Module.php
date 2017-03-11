@@ -52,7 +52,7 @@ class Module extends BaseModule implements yii\base\BootstrapInterface
             $this->layout = false;
         }
         parent::init();
-        Yii::setAlias('resque', dirname(dirname(__DIR__)));
+        Yii::setAlias('@resque', dirname(dirname(__DIR__)));
         $this->initI18N();
         // Custom initialization code goes here
     }

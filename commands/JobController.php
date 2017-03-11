@@ -3,7 +3,6 @@
 namespace spiritdead\yii2resque\commands;
 
 use spiritdead\resque\components\jobs\base\ResqueJobBase;
-use spiritdead\resque\components\workers\base\ResqueWorkerBase;
 use spiritdead\resque\components\workers\ResqueWorker;
 use spiritdead\resque\plugins\schedule\workers\ResqueWorkerScheduler;
 use spiritdead\resque\plugins\schedule\ResqueScheduler;
@@ -13,6 +12,7 @@ use spiritdead\yii2resque\components\actions\DummyErrorAction;
 use spiritdead\yii2resque\components\AsyncActionJob;
 use spiritdead\yii2resque\components\YiiResque;
 use spiritdead\yii2resque\models\Job;
+use spiritdead\yii2resque\models\mongo\Job as MongoJob;
 use yii\console\Controller;
 use yii;
 use yii\base\Module;
@@ -278,20 +278,61 @@ class JobController extends Controller
     }
 
     /**
+     * Re-enqueue jobs failed into his queue
+     */
+    public function actionRepeatJobs()
+    {
+        // Command example
+        $console = $this;
+        $this->stdout(Yii::t('resque', 'Repeating failed jobs') . PHP_EOL);
+        $jobs = Job::find()->where(['result' => Job::RESULT_FAILED])->all();
+        $this->_resque->resqueInstance->events->listen('beforeEnqueue',
+            function ($class, $args, $queue, $id) use ($console) {
+                if (!isset($args[YiiResque::ACTION_META_KEY]['id'])) {
+                    $console->stdout(Yii::t('resque', 'Job not found: {params}', [
+                            'params' => json_encode($args)
+                        ]) . PHP_EOL
+                    );
+                    return;
+                }
+                $job = Job::findOne(['id' => $args[YiiResque::ACTION_META_KEY]['id']]);
+                if ($job !== null) {
+                    $job->result = Job::RESULT_NONE;
+                    $job->result_message = null;
+                    $job->executed_at = null;
+                    $job->id_redis_job = $id;
+                    $job->save();
+                }
+                $this->stdout(Yii::t('resque', 'Job restored: {id} enqueued in {queue}', [
+                        'id' => $args[YiiResque::ACTION_META_KEY]['id'],
+                        'queue' => $queue
+                    ]) . PHP_EOL
+                );
+            });
+        /* @var $job Job */
+        foreach ($jobs as $job) {
+            $mongoJob = MongoJob::findOne(['_id' => $job->id_mongo]);
+            if ($mongoJob != null) {
+                $this->_resque->resqueInstance->enqueue($job->queue, YiiResque::JOB_CLASS, $mongoJob->data, false);
+            }
+        }
+    }
+
+    /**
      * Tests for the server
      */
     public function actionTest()
     {
         // Command example
         $this->stdout(Yii::t('resque', 'Creating jobs dummy...') . PHP_EOL);
-        Yii::$app->yiiResque->createJob(DummyErrorAction::class, []);
+        $this->_resque->createJob(DummyErrorAction::class, []);
         $this->_resque->createJob(DummyErrorAction::class, []);
         $this->_resque->createJob(DummyLongAction::class, ['duration' => 15]);
         $this->_resque->createJob(DummyLongAction::class, []); //'duration' => 15
         $this->_resque->createJob(DummyAction::class, []);
         $this->_resque->enqueueJobIn(5, DummyAction::class, []);
         $this->_resque->enqueueJobIn(5, DummyErrorAction::class, []);
-        $this->stdout(Yii::t('resque', "6 Jobs dummy created") . PHP_EOL);
+        $this->stdout(Yii::t('resque', "6 Dummy jobs created") . PHP_EOL);
 
         /*// For debug in mainThread
         $workerScheduler = new ResqueWorkerScheduler(new ResqueScheduler());
