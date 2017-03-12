@@ -303,7 +303,7 @@ class JobController extends Controller
                     $job->id_redis_job = $id;
                     $job->save();
                 }
-                $this->stdout(Yii::t('resque', 'Job restored: {id} enqueued in {queue}', [
+                $this->stdout(Yii::t('resque', 'Job id {id} restored and enqueued in {queue}', [
                         'id' => $args[YiiResque::ACTION_META_KEY]['id'],
                         'queue' => $queue
                     ]) . PHP_EOL

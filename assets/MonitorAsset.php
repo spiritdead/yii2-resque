@@ -35,4 +35,9 @@ class MonitorAsset extends AssetBundle
         'yii\bootstrap\BootstrapPluginAsset',
         'yii\web\JqueryAsset'
     ];
+
+    public $publishOptions = [
+        'forceCopy'=>true,
+    ];
+
 }

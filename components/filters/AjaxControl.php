@@ -1,6 +1,6 @@
 <?php
 
-namespace spiritdead\resque\components\filters;
+namespace spiritdead\yii2resque\components\filters;
 
 use Yii;
 use yii\base\Action;

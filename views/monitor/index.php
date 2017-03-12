@@ -5,11 +5,12 @@ use yii\data\ActiveDataProvider;
 use spiritdead\resque\components\workers\ResqueWorker;
 use spiritdead\resque\plugins\schedule\ResqueScheduler;
 use spiritdead\yii2resque\assets\MonitorAsset;
+use yii\widgets\Pjax;
 
 /* @var $this View */
 /* @var $workers ResqueWorker[]|ResqueScheduler[] */
 /* @var $dataProvider ActiveDataProvider */
-//MonitorAsset::register($this);
+MonitorAsset::register($this);
 
 $this->title = Yii::t('backend', 'Job Monitor');
 $this->params['description'][] = 'Panel de Control';
@@ -81,7 +82,7 @@ foreach ($workers as $worker) {
 </div>
 <div class="row">
     <div class="col-md-4">
-        <?php //\yii\widgets\Pjax::begin(['id' => 'div-workers', 'timeout' => 0]) ?>
+        <?php Pjax::begin(['id' => 'div-workers', 'timeout' => 0]) ?>
         <div class="ibox float-e-margins">
             <div class="ibox-title">
                 <h5><?= Yii::t('resque', 'Workers') ?></h5>
@@ -123,7 +124,7 @@ foreach ($workers as $worker) {
                 </div>
             </div>
         </div>
-        <?php //\yii\widgets\Pjax::end() ?>
+        <?php Pjax::end() ?>
     </div>
     <div class="col-md-4">
         <div class="tabs-container">

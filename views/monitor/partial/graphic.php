@@ -8,54 +8,7 @@ use yii\web\View;
 InspiniaGraphChartJsAsset::register($this);
 
 $this->registerJs('
-var barData = {
-    labels: ["January", "February", "March", "April", "May", "June", "July"],
-    datasets: [
-        {
-            label: "Failed",
-            fill: false,
-            lineTension: 0.1,
-            backgroundColor: "rgba(255, 99, 132, 0.2)",
-            borderColor: "rgba(255,99,132,1)",
-            data: [65, 59, 80, 81, 56, 55, 40],
-            spanGaps: false,
-        },
-        {
-            label: "Success",
-            fill: false,
-            lineTension: 0.1,
-            backgroundColor: "rgba(75, 192, 192, 0.2)",
-            borderColor: "rgba(75, 192, 192, 1)",
-            data: [50, 20, 50, 71, 90, 88, 10],
-            spanGaps: false,
-        },
-        {
-            label: "Scheduled",
-            fill: false,
-            lineTension: 0.1,
-            backgroundColor: "rgba(255, 206, 86, 0.2)",
-            borderColor: "rgba(255, 206, 86, 1)",
-            data: [15, 29, 40, 41, 96, 15, 30],
-            spanGaps: false,
-        }
-    ]
-    };
 
-    var barOptions = {
-        responsive: true,
-        maintainAspectRatio: false
-    }
-
-
-    var canv = $("#lineChart");
-    canv.height = canv.parent("div")[0].offsetHeight;
-    canv.width = canv.parent("div")[0].offsetWidth;
-    var ctx = canv[0].getContext("2d");
-    var myNewChart = new Chart(ctx, {
-        type: "line",
-        data: barData,
-        options: barOptions
-    });
 ');
 ?>
 <div class="ibox float-e-margins">
@@ -63,10 +16,10 @@ var barData = {
         <h5>Jobs</h5>
         <div class="pull-right">
             <div class="btn-group">
-                <button type="button" class="btn btn-xs btn-white active">Last 24 hour</button>
-                <button type="button" class="btn btn-xs btn-white">Weekly</button>
-                <button type="button" class="btn btn-xs btn-white">Monthly</button>
-                <button type="button" class="btn btn-xs btn-white">Annual</button>
+                <button type="button" data-graph-btn-id="graph-live" class="btn btn-xs btn-white graph-btn">Realtime (every 30 secs)</button>
+                <button type="button" data-graph-btn-id="graph-day" class="btn btn-xs graph-btn btn-white active">Last 24 hour</button>
+                <button type="button" data-graph-btn-id="graph-week" class="btn btn-xs graph-btn btn-white">Weekly</button>
+                <button type="button" data-graph-btn-id="graph-month" class="btn btn-xs graph-btn btn-white">Monthly</button>
             </div>
         </div>
     </div>
