@@ -100,7 +100,7 @@ $(document).ready(function () {
               xhrAjax = undefined;
             }
             xhrAjax = $.ajax({
-              url: '/backend/resque/monitor/statistics?op=1',
+              url: '/resque/monitor/statistics?op=1',
               success: function (result) {
                 if (myChart.data.labels.length > 10) {
                   myChart.data.labels.shift(); // remove the label first
@@ -131,7 +131,7 @@ $(document).ready(function () {
           });
         }
         xhrAjax = $.ajax({
-          url: '/backend/resque/monitor/statistics?op=2',
+          url: '/resque/monitor/statistics?op=2',
           success: function (result) {
             clearGraph(myChart);
             myChart.data.datasets.forEach(function (dataset, datasetIndex) {
@@ -157,7 +157,7 @@ $(document).ready(function () {
           });
         }
         xhrAjax = $.ajax({
-          url: '/backend/resque/monitor/statistics?op=3',
+          url: '/resque/monitor/statistics?op=3',
           success: function (result) {
             clearGraph(myChart);
             myChart.data.datasets.forEach(function (dataset, datasetIndex) {
@@ -183,7 +183,7 @@ $(document).ready(function () {
           });
         }
         xhrAjax = $.ajax({
-          url: '/backend/resque/monitor/statistics?op=4',
+          url: '/resque/monitor/statistics?op=4',
           success: function (result) {
             clearGraph(myChart);
             myChart.data.datasets.forEach(function (dataset, datasetIndex) {

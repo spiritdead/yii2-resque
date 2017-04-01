@@ -3,9 +3,11 @@
 namespace spiritdead\yii2resque\controllers;
 
 use spiritdead\yii2resque\components\filters\AjaxControl;
+use spiritdead\yii2resque\helpers\TimeHelper;
 use yii\db\Query;
 use spiritdead\yii2resque\models\Job;
 use yii\web\Controller;
+use yii\web\Response;
 use yii;
 use yii\filters\AccessControl;
 use yii\data\ActiveDataProvider;
@@ -66,9 +68,26 @@ class MonitorController extends Controller
     /**
      *
      */
-    public function actionWorkers()
+    public function actionStopWorker($worker)
     {
+        //return Yii::$app->yiiResque->runner->runAsync('resque/job/stop-worker');
+    }
 
+    /**
+     * @param string $type
+     * @return Response
+     */
+    public function actionRunWorker($type = 'normal')
+    {
+        switch ($type){
+            case 'normal':
+                Yii::$app->yiiResque->runner->runAsync('resque/job/process');
+                break;
+            case 'scheduler':
+                Yii::$app->yiiResque->runner->runAsync('resque/job/process-schedule');
+                break;
+        }
+        return $this->redirect(['monitor/index']);
     }
 
     /**
@@ -88,7 +107,7 @@ class MonitorController extends Controller
             case 1: // Realtime
                 $time = strtotime('now');
                 // TimeInterval
-                $tI = (25 * 30);
+                $tI = (30); //25 * 30
                 $data = (new yii\db\Query())
                     ->select([
                         'COALESCE(SUM(IF(result = ' . Job::RESULT_NONE . ' ,1,0)),0) AS Pending',
@@ -107,16 +126,17 @@ class MonitorController extends Controller
                 }
                 break;
             case 2: // Today
+                $GMT = TimeHelper::getStandardOffsetUTC(Yii::$app->timeZone);
                 $data = (new yii\db\Query())
                     ->select([
                         'COALESCE(SUM(IF(result = ' . Job::RESULT_NONE . ' ,1,0)),0) AS Pending',
                         'COALESCE(SUM(IF(result = ' . Job::RESULT_SUCCESS . ' ,1,0)),0) AS Success',
                         'COALESCE(SUM(IF(result = ' . Job::RESULT_FAILED . ' ,1,0)),0) AS Failed',
                         'COALESCE(SUM(IF(result = ' . Job::RESULT_NONE . ' and scheduled = true ,1,0)),0) AS Scheduled',
-                        'HOUR(FROM_UNIXTIME(created_at)) as hr'
+                        'HOUR(CONVERT_TZ(FROM_UNIXTIME(created_at), "+00:00", "'. $GMT .'")) as hr'
                     ])
                     ->from(Job::tableName())
-                    ->where(['>', 'created_at', strtotime(date('00:00'))])
+                    ->where(['>', 'created_at', strtotime(date('00:00') . ' UTC')])
                     ->groupBy('hr')
                     ->orderBy(['hr' => SORT_ASC])
                     ->all();
@@ -134,13 +154,14 @@ class MonitorController extends Controller
                 }
                 break;
             case 3: // Week
+                $GMT = TimeHelper::getStandardOffsetUTC(Yii::$app->timeZone);
                 $data = (new yii\db\Query())
                     ->select([
                         'COALESCE(SUM(IF(result = ' . Job::RESULT_NONE . ' ,1,0)),0) AS Pending',
                         'COALESCE(SUM(IF(result = ' . Job::RESULT_SUCCESS . ' ,1,0)),0) AS Success',
                         'COALESCE(SUM(IF(result = ' . Job::RESULT_FAILED . ' ,1,0)),0) AS Failed',
                         'COALESCE(SUM(IF(result = ' . Job::RESULT_NONE . ' and scheduled = true ,1,0)),0) AS Scheduled',
-                        'WEEKDAY(FROM_UNIXTIME(created_at)) as wd'
+                        'WEEKDAY(CONVERT_TZ(FROM_UNIXTIME(created_at), "+00:00", "'. $GMT .'")) as wd'
                     ])
                     ->from(Job::tableName())
                     ->where(['>', 'created_at', strtotime(date('w'))])
@@ -161,13 +182,14 @@ class MonitorController extends Controller
                 }
                 break;
             case 4: // Month
+                $GMT = TimeHelper::getStandardOffsetUTC(Yii::$app->timeZone);
                 $data = (new yii\db\Query())
                     ->select([
                         'COALESCE(SUM(IF(result = ' . Job::RESULT_NONE . ' ,1,0)),0) AS Pending',
                         'COALESCE(SUM(IF(result = ' . Job::RESULT_SUCCESS . ' ,1,0)),0) AS Success',
                         'COALESCE(SUM(IF(result = ' . Job::RESULT_FAILED . ' ,1,0)),0) AS Failed',
                         'COALESCE(SUM(IF(result = ' . Job::RESULT_NONE . ' and scheduled = true ,1,0)),0) AS Scheduled',
-                        'MONTH(FROM_UNIXTIME(created_at)) as mt'
+                        'MONTH(CONVERT_TZ(FROM_UNIXTIME(created_at), "+00:00", "'. $GMT .'")) as mt'
                     ])
                     ->from(Job::tableName())
                     ->where(['>', 'created_at', strtotime(date('y'))])

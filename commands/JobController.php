@@ -222,37 +222,106 @@ class JobController extends Controller
      */
     public function actionClean($action = '')
     {
-        if ($action == 'delete') {
-            $this->stdout(Yii::t('resque', 'Cleaning Queues...') . PHP_EOL);
-            foreach ($this->_resque->getQueues() as $queueName) {
-                if ($queueName != AsyncActionJob::QUEUE_NAME) {
-                    $this->stdout(Yii::t('resque', 'Queue {queue} deleted', ['queue' => $queueName]) . PHP_EOL);
-                    $this->_resque->removeQueue($queueName);
+        switch ($action) {
+            case 'purge':
+                $this->stdout(Yii::t('resque', 'Cleaning Queues...') . PHP_EOL);
+                foreach ($this->_resque->getQueues() as $queueName) {
+                    if ($queueName != AsyncActionJob::QUEUE_NAME) {
+                        $this->stdout(Yii::t('resque', 'Queue {queue} deleted', ['queue' => $queueName]) . PHP_EOL);
+                        $this->_resque->removeQueue($queueName);
+                    }
                 }
-            }
-            $this->stdout(Yii::t('resque', 'Cleaning Workers...') . PHP_EOL);
-            $workers = array_merge($this->_resque->getWorkers(), $this->_resque->getWorkerSchedulers());
-            /* @var $worker ResqueWorker | ResqueScheduler */
-            foreach ($workers as $worker) {
-                $this->stdout(Yii::t('resque', 'Worker {worker} deleted', ['worker' => $worker]) . PHP_EOL);
-                $worker->unregisterWorker();
-            }
-        } elseif ($action == 'inactive') {
-            $workerPids = ResqueWorker::workerPids(); //are generics all of the PID of the computer
+                $this->stdout(Yii::t('resque', 'Cleaning Workers...') . PHP_EOL);
+                $workers = array_merge($this->_resque->getWorkers(), $this->_resque->getWorkerSchedulers());
+                /* @var $worker ResqueWorker | ResqueScheduler */
+                foreach ($workers as $worker) {
+                    if (is_object($worker)) {
+                        list($host, $pid, $queues) = explode(':', (string)$worker, 3);
+                        if (file_exists("/proc/$pid")) {
+                            //process with a pid = $pid is running
+                            shell_exec("kill -9 $pid");
+                        }
+                        $worker->unregisterWorker();
+                        $this->stdout(Yii::t('resque', 'Worker {worker} stopped', ['worker' => $worker]) . PHP_EOL);
+                    }
+                }
+                /* @var $worker ResqueWorker | ResqueScheduler */
+                foreach ($workers as $worker) {
+                    $this->stdout(Yii::t('resque', 'Worker {worker} deleted', ['worker' => $worker]) . PHP_EOL);
+                    $worker->unregisterWorker();
+                }
+                break;
+            case 'worker':
+                $this->stdout(Yii::t('resque', 'Cleaning Workers...') . PHP_EOL);
+                $workers = array_merge($this->_resque->getWorkers(), $this->_resque->getWorkerSchedulers());
+                /* @var $worker ResqueWorker | ResqueScheduler */
+                foreach ($workers as $worker) {
+                    if (is_object($worker)) {
+                        list($host, $pid, $queues) = explode(':', (string)$worker, 3);
+                        if (file_exists("/proc/$pid")) {
+                            //process with a pid = $pid is running
+                            shell_exec("kill -9 $pid");
+                        }
+                        $worker->unregisterWorker();
+                        $this->stdout(Yii::t('resque', 'Worker {worker} stopped', ['worker' => $worker]) . PHP_EOL);
+                    }
+                }
+                /* @var $worker ResqueWorker | ResqueScheduler */
+                foreach ($workers as $worker) {
+                    $this->stdout(Yii::t('resque', 'Worker {worker} deleted in redis', ['worker' => $worker]) . PHP_EOL);
+                    $worker->unregisterWorker();
+                }
+                break;
+            case 'inactive':
+                $workerPids = ResqueWorker::workerPids(); //are generics all of the PID of the computer
+                $workers = array_merge($this->_resque->getWorkers(), $this->_resque->getWorkerSchedulers());
+                /* @var $worker ResqueWorker | ResqueScheduler */
+                foreach ($workers as $worker) {
+                    if (is_object($worker)) {
+                        list($host, $pid, $queues) = explode(':', (string)$worker, 3);
+                        if (in_array($pid, $workerPids)) {
+                            continue;
+                        }
+                        $worker->unregisterWorker();
+                        $this->stdout(Yii::t('resque', 'Worker {worker} deleted', ['worker' => $worker]) . PHP_EOL);
+                    }
+                }
+                break;
+            default:
+                $this->stdout(Yii::t('resque', 'Actions availables:') . PHP_EOL);
+                $this->stdout(Yii::t('resque', '[purge] wipe all of the data in redis, destroy all of the workers') . PHP_EOL);
+                $this->stdout(Yii::t('resque', '[inactive] clean the workers inactives in redis') . PHP_EOL);
+                $this->stdout(Yii::t('resque', '[worker] kill and clean all of the workers') . PHP_EOL);
+        }
+    }
+
+    /**
+     * @param string $pid
+     */
+    public function actionStopWorker($pid = '*') {
+        if ($pid == '*'){
+            $this->stdout(Yii::t('resque', 'Worker stopping all of the workers') . PHP_EOL);
             $workers = array_merge($this->_resque->getWorkers(), $this->_resque->getWorkerSchedulers());
             /* @var $worker ResqueWorker | ResqueScheduler */
             foreach ($workers as $worker) {
                 if (is_object($worker)) {
                     list($host, $pid, $queues) = explode(':', (string)$worker, 3);
-                    if (in_array($pid, $workerPids)) {
-                        continue;
+                    if (file_exists("/proc/$pid")) {
+                        //process with a pid = $pid is running
+                        shell_exec("kill $pid");
                     }
                     $worker->unregisterWorker();
-                    $this->stdout(Yii::t('resque', 'Worker {worker} deleted', ['worker' => $worker]) . PHP_EOL);
+                    $this->stdout(Yii::t('resque', 'Worker {worker} stopped', ['worker' => $worker]) . PHP_EOL);
                 }
             }
-        } else {
-            $this->stdout(Yii::t('resque', 'Actions availables are [delete/inactive]') . PHP_EOL);
+        } elseif (intval($pid)) {
+            if (file_exists("/proc/$pid")) {
+                //process with a pid = $pid is running
+                shell_exec("kill $pid");
+                $this->stdout(Yii::t('resque', 'Worker {worker} stopped', ['worker' => $pid]) . PHP_EOL);
+            } else {
+                $this->stdout(Yii::t('resque', 'Worker {worker} not found', ['worker' => $pid]) . PHP_EOL);
+            }
         }
     }
 
@@ -312,7 +381,7 @@ class JobController extends Controller
         /* @var $job Job */
         foreach ($jobs as $job) {
             $mongoJob = MongoJob::findOne(['_id' => $job->id_mongo]);
-            if ($mongoJob != null) {
+            if ($mongoJob !== null) {
                 $this->_resque->resqueInstance->enqueue($job->queue, YiiResque::JOB_CLASS, $mongoJob->data, false);
             }
         }
@@ -337,7 +406,7 @@ class JobController extends Controller
         /*// For debug in mainThread
         $workerScheduler = new ResqueWorkerScheduler(new ResqueScheduler());
         $workerScheduler->handleDelayedItems();
-        $worker = new ResqueWorker(Yii::$app->resque->resqueInstance,['*']);
+        $worker = new ResqueWorker(Yii::$app->yiiResque->resqueInstance,['*']);
         // Start the worker
         $worker->work(2);*/
     }

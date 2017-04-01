@@ -22,6 +22,15 @@ use yii\helpers\ArrayHelper;
 class YiiResque extends Component
 {
     /**
+     * @const string The array key to use for the action meta data.
+     */
+    const ACTION_META_KEY = '_action';
+
+    /**
+     * @const string The async job class
+     */
+    const JOB_CLASS = AsyncActionJob::class;
+    /**
      * @var null|Resque|ResqueScheduler
      */
     public $resqueInstance = null;
@@ -46,15 +55,8 @@ class YiiResque extends Component
      */
     public $password = '';
 
-    /**
-     * @const string The array key to use for the action meta data.
-     */
-    const ACTION_META_KEY = '_action';
 
-    /**
-     * @const string The async job class
-     */
-    const JOB_CLASS = AsyncActionJob::class;
+    public $runner = null;
 
     /**
      * Initializes the connection.
@@ -65,6 +67,9 @@ class YiiResque extends Component
 
         if ($this->server === null || $this->port === null) {
             throw new InvalidConfigException("Please define the server and the port in the config of the component");
+        }
+        if ($this->runner === null){
+            $this->runner = new Runner();
         }
         $this->resqueInstance = new Resque(
             new ResqueBackend(

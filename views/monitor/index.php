@@ -6,6 +6,7 @@ use spiritdead\resque\components\workers\ResqueWorker;
 use spiritdead\resque\plugins\schedule\ResqueScheduler;
 use spiritdead\yii2resque\assets\MonitorAsset;
 use yii\widgets\Pjax;
+use yii\helpers\Html;
 
 /* @var $this View */
 /* @var $workers ResqueWorker[]|ResqueScheduler[] */
@@ -82,54 +83,9 @@ foreach ($workers as $worker) {
 </div>
 <div class="row">
     <div class="col-md-4">
-        <?php Pjax::begin(['id' => 'div-workers', 'timeout' => 0]) ?>
-        <div class="ibox float-e-margins">
-            <div class="ibox-title">
-                <h5><?= Yii::t('resque', 'Workers') ?></h5>
-                <div class="ibox-tools">
-                    <a href>
-                        <i class="fa fa-refresh"></i>
-                    </a>
-                    <a class="collapse-link">
-                        <i class="fa fa-chevron-up"></i>
-                    </a>
-                    <a class="close-link">
-                        <i class="fa fa-times"></i>
-                    </a>
-                </div>
-            </div>
-            <div class="ibox-content ibox-heading">
-                <h3>
-                    <i class="fa fa-briefcase"></i>
-                    <?= Yii::t('resque',
-                        '{n, plural, =0{# workers connected} =1{# worker connected} other{# workers connected}}',
-                        ['n' => count($workers)]) ?>
-                </h3>
-                <small>
-                    <i class="fa fa-tim"></i>
-                    <?= Yii::t('resque',
-                        'You have {n, plural, =0{# workers} =1{# worker} other{# workers}} working and {n1} free',
-                        ['n' => $workersWorking, 'n1' => $workersFree]) ?>.
-                </small>
-            </div>
-            <div class="ibox-content">
-                <div class="feed-activity-list">
-                    <?php if ($workers !== false): ?>
-                        <?php foreach ($workers as $worker): ?>
-                            <?= $this->render('partial/worker', ['worker' => $worker]) ?>
-                        <?php endforeach; ?>
-                    <?php else: ?>
-                        <p><?= Yii::t('resque', 'Not workers available') ?></p>
-                    <?php endif; ?>
-                </div>
-            </div>
-        </div>
-        <?php Pjax::end() ?>
-    </div>
-    <div class="col-md-4">
         <div class="tabs-container">
             <ul class="nav nav-tabs">
-                <li class="active"><a data-toggle="tab" href="#tab-1"><i class="fa fa-database"></i></a></li>
+                <li class="active"><a data-toggle="tab" href="#tab-1"><i class="fa fa-users"></i></a></li>
                 <li class=""><a data-toggle="tab" href="#tab-2"><i class="fa fa-check"></i></a></li>
                 <li class=""><a data-toggle="tab" href="#tab-3"><i class="fa fa-times"></i></a></li>
                 <li class=""><a data-toggle="tab" href="#tab-4"><i class="fa fa-clock-o"></i></a></li>
@@ -137,23 +93,28 @@ foreach ($workers as $worker) {
             <div class="tab-content">
                 <div id="tab-1" class="tab-pane active">
                     <div class="panel-body">
-                        <strong>Lorem ipsum dolor sit amet, consectetuer adipiscing</strong>
-
-                        <p>A wonderful serenity has taken possession of my entire soul, like these sweet
-                            mornings of spring which I enjoy with my whole heart. I am alone, and feel the
-                            charm of
-                            existence in this spot, which was created for the bliss of souls like mine.</p>
-
-                        <p>I am so happy, my dear friend, so absorbed in the exquisite sense of mere
-                            tranquil existence, that I neglect my talents. I should be incapable of drawing
-                            a single stroke at
-                            the present moment; and yet I feel that I never was a greater artist than now.
-                            When.</p>
+                        <div class="text-center">
+                            <strong><?= Yii::t('resque', 'Worker Manager') ?></strong>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-12">
+                                <?= Html::a(Yii::t('resque', 'Run worker'),
+                                    ['run-worker', 'type' => 'normal'],
+                                    [ 'class' => 'btn btn-success'])
+                                ?>
+                                <?= Html::a(Yii::t('resque', 'Run worker scheduler'),
+                                    ['run-worker', 'type' => 'scheduler'],
+                                    ['class' => 'btn btn-success'])
+                                ?>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <div id="tab-2" class="tab-pane">
                     <div class="panel-body">
-                        <strong>Donec quam felis</strong>
+                        <div class="text-center">
+                            <strong><?= Yii::t('resque', 'Job Manager') ?></strong>
+                        </div>
 
                         <p>Thousand unknown plants are noticed by me: when I hear the buzz of the little
                             world among the stalks, and grow familiar with the countless indescribable forms
@@ -204,6 +165,51 @@ foreach ($workers as $worker) {
                 </div>
             </div>
         </div>
+    </div>
+    <div class="col-md-4">
+        <?php Pjax::begin(['id' => 'div-workers', 'timeout' => 0]) ?>
+        <div class="ibox float-e-margins">
+            <div class="ibox-title">
+                <h5><?= Yii::t('resque', 'Workers') ?></h5>
+                <div class="ibox-tools">
+                    <a href>
+                        <i class="fa fa-refresh"></i>
+                    </a>
+                    <a class="collapse-link">
+                        <i class="fa fa-chevron-up"></i>
+                    </a>
+                    <a class="close-link">
+                        <i class="fa fa-times"></i>
+                    </a>
+                </div>
+            </div>
+            <div class="ibox-content ibox-heading">
+                <h3>
+                    <i class="fa fa-briefcase"></i>
+                    <?= Yii::t('resque',
+                        '{n, plural, =0{# workers connected} =1{# worker connected} other{# workers connected}}',
+                        ['n' => count($workers)]) ?>
+                </h3>
+                <small>
+                    <i class="fa fa-tim"></i>
+                    <?= Yii::t('resque',
+                        'You have {n, plural, =0{# workers} =1{# worker} other{# workers}} working and {n1} free',
+                        ['n' => $workersWorking, 'n1' => $workersFree]) ?>.
+                </small>
+            </div>
+            <div class="ibox-content">
+                <div class="feed-activity-list">
+                    <?php if ($workers !== false): ?>
+                        <?php foreach ($workers as $worker): ?>
+                            <?= $this->render('partial/worker', ['worker' => $worker]) ?>
+                        <?php endforeach; ?>
+                    <?php else: ?>
+                        <p><?= Yii::t('resque', 'Not workers available') ?></p>
+                    <?php endif; ?>
+                </div>
+            </div>
+        </div>
+        <?php Pjax::end() ?>
     </div>
     <div class="col-md-4">
         <div class="row">

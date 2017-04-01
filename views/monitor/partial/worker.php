@@ -20,8 +20,9 @@ if ($worker instanceof ResqueScheduler) {
 }
 $job = $worker->currentJob;
 $jobID = '';
-if(isset($job['payload']['args'][0][YiiResque::ACTION_META_KEY]['id'])) {
-    $jobID = $job['payload']['args'][0][YiiResque::ACTION_META_KEY]['id'];
+$timeStart = $worker->getStartTime();
+if (isset($job->payload['args'][0][YiiResque::ACTION_META_KEY]['id'])) {
+    $jobID = $job->payload['args'][0][YiiResque::ACTION_META_KEY]['id'];
     $job = Job::findOne(['id' => $jobID]);
     $job = mongoJob::findOne(['_id' => $job->id_mongo]);
     $classShort = explode('\\', $job->class);
@@ -37,10 +38,12 @@ $job = json_encode($job);
 ?>
 <div class="feed-element">
     <div>
-        <small class="pull-right text-navy">
-            <?= Yii::t('resque', 'Queue: {queue}', ['queue' => implode(',', $queues)]) ?>
-        </small>
-        <strong><?= (string)$worker ?></strong>
+        <div>
+            <strong><?= (string)$worker ?></strong>
+            <div class="pull-right">
+
+            </div>
+        </div>
         <div>
             <?= $processed . ' / ' . $success . ' / ' . $failed ?>
         </div>
@@ -48,8 +51,17 @@ $job = json_encode($job);
             <span>Total Processed / Total completed / Total Failed</span>
         </div>
         <div class="worker-currentjob">
-            <?= Yii::t('resque', 'Current job [{id}]: {job}',['id' => $jobID, 'job' => $job])?>
+            <?= Yii::t(
+                'resque',
+                'Current job [{id}]: {job}',
+                ['id' => $jobID, 'job' => isset($job) ? $job : Yii::t('resque', 'Free')])
+            ?>
         </div>
-        <small class="text-muted">Today 5:60 pm - 12.06.2014</small>
+        <small class="text-muted">
+            <?= date('d M y h:i:s a', $timeStart) ?>
+            <span class="pull-right text-navy">
+                <?= Yii::t('resque', 'Queue: {queue}', ['queue' => implode(',', $queues)]) ?>
+            </span>
+        </small>
     </div>
 </div>
