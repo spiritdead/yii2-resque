@@ -78,7 +78,7 @@ foreach ($workers as $worker) {
 </div>
 <div class="row">
     <div class="col-md-12">
-        <?= $this->render('partial/graphic', []) ?>
+        <?= $this->render('partials/graphic', []) ?>
     </div>
 </div>
 <div class="row">
@@ -201,7 +201,7 @@ foreach ($workers as $worker) {
                 <div class="feed-activity-list">
                     <?php if ($workers !== false): ?>
                         <?php foreach ($workers as $worker): ?>
-                            <?= $this->render('partial/worker', ['worker' => $worker]) ?>
+                            <?= $this->render('partials/worker', ['worker' => $worker]) ?>
                         <?php endforeach; ?>
                     <?php else: ?>
                         <p><?= Yii::t('resque', 'Not workers available') ?></p>
@@ -245,7 +245,7 @@ foreach ($workers as $worker) {
                     </div>
                     <div class="ibox-content inspinia-timeline job-history">
                         <?php foreach ($dataProvider->getModels() as $job): ?>
-                            <?= $this->render('partial/history', ['job' => $job]) ?>
+                            <?= $this->render('partials/history', ['job' => $job]) ?>
                         <?php endforeach; ?>
                     </div>
                 </div>

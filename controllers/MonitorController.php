@@ -29,7 +29,7 @@ class MonitorController extends Controller
                 'only' => ['index'],
                 'rules' => [
                     [
-                        'actions' => ['index', 'statistics'],
+                        'actions' => ['index', 'statistics', 'run-worker', 'stop-worker'],
                         'allow' => true,
                         'roles' => ['@'],
                         'matchCallback' => function () {
