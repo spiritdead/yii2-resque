@@ -55,7 +55,9 @@ class YiiResque extends Component
      */
     public $password = '';
 
-
+    /**
+     * @var Runner
+     */
     public $runner = null;
 
     /**
@@ -68,18 +70,11 @@ class YiiResque extends Component
         if ($this->server === null || $this->port === null) {
             throw new InvalidConfigException("Please define the server and the port in the config of the component");
         }
-        if ($this->runner === null){
+        if ($this->runner === null) {
             $this->runner = new Runner();
         }
         $this->resqueInstance = new Resque(
-            new ResqueBackend(
-                $this->server,
-                $this->port,
-                $this->database,
-                ResqueBackend::DEFAULT_NAMESPACE_REDIS,
-                ResqueBackend::DEFAULT_NAMESPACE_WORKERS,
-                false
-            )
+            new ResqueBackend($this->server, $this->port, $this->database)
         );
     }
 
@@ -89,6 +84,8 @@ class YiiResque extends Component
      * @param string $queue The name of the queue to place the job in.
      * @param string $class The name of the class that contains the code to execute the job.
      * @param array $args Any optional arguments that should be passed when the job is executed.
+     * @param string $jobAction name of action in the job
+     * @param boolean $track_status track status of the jobs
      *
      * @return string
      */
@@ -305,12 +302,14 @@ class YiiResque extends Component
      * @param string $id
      * @return ResqueWorker|ResqueWorker[]|null
      */
-    public function getWorkers($id = '')
+    public function getWorkers($id = '', $classWorker = ResqueWorker::class)
     {
-        if (empty($id)) {
-            return ResqueWorker::all($this->resqueInstance);
+        if(class_exists($classWorker)) {
+            if (empty($id)) {
+                return call_user_func($classWorker . '::all', $this->resqueInstance);
+            }
+            $worker = call_user_func($classWorker . '::find', $this->resqueInstance, $id);
         }
-        $worker = ResqueWorker::find($this->resqueInstance, $id);
         if (!$worker) {
             return $worker;
         }

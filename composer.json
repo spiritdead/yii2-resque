@@ -10,7 +10,7 @@
     }
   ],
   "require": {
-    "spiritdead/resque": "^1.0.4"
+    "spiritdead/resque": "^1.0.5"
   },
   "autoload": {
     "psr-4": {

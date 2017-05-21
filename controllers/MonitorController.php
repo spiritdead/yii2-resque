@@ -4,13 +4,13 @@ namespace spiritdead\yii2resque\controllers;
 
 use spiritdead\yii2resque\components\filters\AjaxControl;
 use spiritdead\yii2resque\helpers\TimeHelper;
-use yii\db\Query;
 use spiritdead\yii2resque\models\Job;
+use yii;
+use yii\data\ActiveDataProvider;
+use yii\db\Query;
+use yii\filters\AccessControl;
 use yii\web\Controller;
 use yii\web\Response;
-use yii;
-use yii\filters\AccessControl;
-use yii\data\ActiveDataProvider;
 
 /**
  * Class MonitorController
@@ -79,7 +79,7 @@ class MonitorController extends Controller
      */
     public function actionRunWorker($type = 'normal')
     {
-        switch ($type){
+        switch ($type) {
             case 'normal':
                 Yii::$app->yiiResque->runner->runAsync('resque/job/process');
                 break;
@@ -133,7 +133,7 @@ class MonitorController extends Controller
                         'COALESCE(SUM(IF(result = ' . Job::RESULT_SUCCESS . ' ,1,0)),0) AS Success',
                         'COALESCE(SUM(IF(result = ' . Job::RESULT_FAILED . ' ,1,0)),0) AS Failed',
                         'COALESCE(SUM(IF(result = ' . Job::RESULT_NONE . ' and scheduled = true ,1,0)),0) AS Scheduled',
-                        'HOUR(CONVERT_TZ(FROM_UNIXTIME(created_at), "+00:00", "'. $GMT .'")) as hr'
+                        'HOUR(CONVERT_TZ(FROM_UNIXTIME(created_at), "+00:00", "' . $GMT . '")) as hr'
                     ])
                     ->from(Job::tableName())
                     ->where(['>', 'created_at', strtotime(date('00:00') . ' UTC')])
@@ -161,7 +161,7 @@ class MonitorController extends Controller
                         'COALESCE(SUM(IF(result = ' . Job::RESULT_SUCCESS . ' ,1,0)),0) AS Success',
                         'COALESCE(SUM(IF(result = ' . Job::RESULT_FAILED . ' ,1,0)),0) AS Failed',
                         'COALESCE(SUM(IF(result = ' . Job::RESULT_NONE . ' and scheduled = true ,1,0)),0) AS Scheduled',
-                        'WEEKDAY(CONVERT_TZ(FROM_UNIXTIME(created_at), "+00:00", "'. $GMT .'")) as wd'
+                        'WEEKDAY(CONVERT_TZ(FROM_UNIXTIME(created_at), "+00:00", "' . $GMT . '")) as wd'
                     ])
                     ->from(Job::tableName())
                     ->where(['>', 'created_at', strtotime(date('w'))])
@@ -189,7 +189,7 @@ class MonitorController extends Controller
                         'COALESCE(SUM(IF(result = ' . Job::RESULT_SUCCESS . ' ,1,0)),0) AS Success',
                         'COALESCE(SUM(IF(result = ' . Job::RESULT_FAILED . ' ,1,0)),0) AS Failed',
                         'COALESCE(SUM(IF(result = ' . Job::RESULT_NONE . ' and scheduled = true ,1,0)),0) AS Scheduled',
-                        'MONTH(CONVERT_TZ(FROM_UNIXTIME(created_at), "+00:00", "'. $GMT .'")) as mt'
+                        'MONTH(CONVERT_TZ(FROM_UNIXTIME(created_at), "+00:00", "' . $GMT . '")) as mt'
                     ])
                     ->from(Job::tableName())
                     ->where(['>', 'created_at', strtotime(date('y'))])

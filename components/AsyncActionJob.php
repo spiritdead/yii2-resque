@@ -45,7 +45,7 @@ class AsyncActionJob extends ResqueJob implements ResqueJobInterface
 
         if ($this->_job === null) {
             throw new ResqueJobPerformException(Yii::t('resque', 'Job not found in database mysql.'));
-        } elseif($this->_jobMongo === null) {
+        } elseif ($this->_jobMongo === null) {
             throw new ResqueJobPerformException(Yii::t('resque', 'Job not found in database mongoDB.'));
         }
 
@@ -78,8 +78,7 @@ class AsyncActionJob extends ResqueJob implements ResqueJobInterface
                     ],
                     'job' => [
                         'status' => $job->status->get(),
-                        'args' => $job->getArguments(),
-                        'instance' => $instance,
+                        'args' => $job->getArguments()
                     ],
                 ];
             } else {
@@ -90,8 +89,7 @@ class AsyncActionJob extends ResqueJob implements ResqueJobInterface
                     ],
                     'job' => [
                         'status' => $job->status->get(),
-                        'args' => $job->getArguments(),
-                        'instance' => $instance,
+                        'args' => $job->getArguments()
                     ],
                 ];
             }
@@ -134,7 +132,7 @@ class AsyncActionJob extends ResqueJob implements ResqueJobInterface
             $this->result = call_user_func($func, $this->args['params']);
             $this->result['class'] = $this->_jobMongo['class'];
             $this->result['action'] = $this->_jobMongo['action'];
-            if(!$this->result['success']) {
+            if (!$this->result['success']) {
                 throw new ResqueJobPerformException($this->result['message']);
             }
         }

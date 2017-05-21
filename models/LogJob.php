@@ -5,6 +5,7 @@ namespace spiritdead\yii2resque\models;
 use Yii;
 use yii\behaviors\TimestampBehavior;
 use yii\db\ActiveRecord;
+use yii\helpers\Json;
 
 /**
  * This is the model class for table "log_job".
@@ -69,18 +70,6 @@ class LogJob extends \yii\db\ActiveRecord
     {
         $this->data = json_decode($this->data);
         return parent::afterFind();
-    }
-
-    /**
-     * Override beforeValidate
-     * @return bool
-     */
-    public function beforeValidate()
-    {
-        if (!(is_string($this->data) && is_object(json_decode($this->data)) && (json_last_error() == JSON_ERROR_NONE))) {
-            $this->data = json_encode($this->data);
-        }
-        return parent::beforeValidate();
     }
 
     /**
@@ -153,10 +142,13 @@ class LogJob extends \yii\db\ActiveRecord
         $model = new self;
         $model->job_id = $job_id;
         $model->success = $success;
-        $model->category = $category;
-        $model->data = $data;
+        $model->category = (string)$category;
+        if(is_string($data)) {
+            $model->data = $data;
+        } else {
+            $model->data = json_encode($data);
+        }
         $model->new = true;
-        $model->save();
-        return true;
+        return $model->save();
     }
 }

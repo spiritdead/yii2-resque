@@ -4,18 +4,18 @@ namespace spiritdead\yii2resque\commands;
 
 use spiritdead\resque\components\jobs\base\ResqueJobBase;
 use spiritdead\resque\components\workers\ResqueWorker;
-use spiritdead\resque\plugins\schedule\workers\ResqueWorkerScheduler;
 use spiritdead\resque\plugins\schedule\ResqueScheduler;
+use spiritdead\resque\plugins\schedule\workers\ResqueWorkerScheduler;
 use spiritdead\yii2resque\components\actions\DummyAction;
-use spiritdead\yii2resque\components\actions\DummyLongAction;
 use spiritdead\yii2resque\components\actions\DummyErrorAction;
+use spiritdead\yii2resque\components\actions\DummyLongAction;
 use spiritdead\yii2resque\components\AsyncActionJob;
 use spiritdead\yii2resque\components\YiiResque;
 use spiritdead\yii2resque\models\Job;
 use spiritdead\yii2resque\models\mongo\Job as MongoJob;
-use yii\console\Controller;
 use yii;
 use yii\base\Module;
+use yii\console\Controller;
 
 /**
  * Controller for management of the jobs in queue.
@@ -219,6 +219,7 @@ class JobController extends Controller
 
     /**
      * Clean-up queues in the redis
+     * @param $action string
      */
     public function actionClean($action = '')
     {
@@ -268,7 +269,8 @@ class JobController extends Controller
                 }
                 /* @var $worker ResqueWorker | ResqueScheduler */
                 foreach ($workers as $worker) {
-                    $this->stdout(Yii::t('resque', 'Worker {worker} deleted in redis', ['worker' => $worker]) . PHP_EOL);
+                    $this->stdout(Yii::t('resque', 'Worker {worker} deleted in redis',
+                            ['worker' => $worker]) . PHP_EOL);
                     $worker->unregisterWorker();
                 }
                 break;
@@ -289,7 +291,8 @@ class JobController extends Controller
                 break;
             default:
                 $this->stdout(Yii::t('resque', 'Actions availables:') . PHP_EOL);
-                $this->stdout(Yii::t('resque', '[purge] wipe all of the data in redis, destroy all of the workers') . PHP_EOL);
+                $this->stdout(Yii::t('resque',
+                        '[purge] wipe all of the data in redis, destroy all of the workers') . PHP_EOL);
                 $this->stdout(Yii::t('resque', '[inactive] clean the workers inactives in redis') . PHP_EOL);
                 $this->stdout(Yii::t('resque', '[worker] kill and clean all of the workers') . PHP_EOL);
         }
@@ -298,8 +301,9 @@ class JobController extends Controller
     /**
      * @param string $pid
      */
-    public function actionStopWorker($pid = '*') {
-        if ($pid == '*'){
+    public function actionStopWorker($pid = '*')
+    {
+        if ($pid == '*') {
             $this->stdout(Yii::t('resque', 'Worker stopping all of the workers') . PHP_EOL);
             $workers = array_merge($this->_resque->getWorkers(), $this->_resque->getWorkerSchedulers());
             /* @var $worker ResqueWorker | ResqueScheduler */
@@ -399,9 +403,13 @@ class JobController extends Controller
         $this->_resque->createJob(DummyLongAction::class, ['duration' => 15]);
         $this->_resque->createJob(DummyLongAction::class, []); //'duration' => 15
         $this->_resque->createJob(DummyAction::class, []);
+        $this->_resque->createJob(DummyAction::class, []);
+        $this->_resque->createJob(DummyAction::class, []);
+        $this->_resque->createJob(DummyAction::class, []);
+        $this->_resque->createJob(DummyAction::class, []);
         $this->_resque->enqueueJobIn(5, DummyAction::class, []);
         $this->_resque->enqueueJobIn(5, DummyErrorAction::class, []);
-        $this->stdout(Yii::t('resque', "6 Dummy jobs created") . PHP_EOL);
+        $this->stdout(Yii::t('resque', "11 Dummy jobs created") . PHP_EOL);
 
         /*// For debug in mainThread
         $workerScheduler = new ResqueWorkerScheduler(new ResqueScheduler());
